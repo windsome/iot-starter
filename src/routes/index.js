@@ -2,6 +2,7 @@
 import CoreLayout from '../layouts/CoreLayout/CoreLayout'
 import Home from './Home'
 import CounterRoute from './Counter'
+import ZenRoute from './Zen'
 
 /*  Note: Instead of using JSX, we recommend using react-router
     PlainRoute objects to build route definitions.   */
@@ -9,10 +10,20 @@ import CounterRoute from './Counter'
 export const createRoutes = (store) => ({
   path: '/',
   component: CoreLayout,
-  indexRoute: Home,
+  indexRoute: Home, 
   childRoutes: [
-    CounterRoute(store)
+    CounterRoute(store),
+    ZenRoute(store)
   ]
+    /*getChildRoutes (location, cb) {
+      require.ensure([], (require) => {
+        cb(null, [
+          // Remove imports!
+          require('./Counter').default(store),
+          require('./Zen').default(store)
+        ])
+      })
+    }*/
 })
 
 /*  Note: childRoutes can be chunked or otherwise loaded programmatically
