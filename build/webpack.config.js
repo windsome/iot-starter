@@ -9,7 +9,7 @@ const debug = _debug('app:webpack:config')
 const paths = config.utils_paths
 const {__DEV__, __PROD__, __TEST__} = config.globals
 
-debug('Create configuration.')
+debug('Create configuration. __DEV__='+__DEV__+',__PROD__='+__PROD__+',__TEST__='+__TEST__)
 const webpackConfig = {
   name: 'client',
   target: 'web',
@@ -42,6 +42,7 @@ webpackConfig.output = {
   path: paths.dist(),
   publicPath: config.compiler_public_path
 }
+debug('windsome:filename='+webpackConfig.output.filename+",path="+webpackConfig.output.path+",publicPath="+webpackConfig.output.publicPath);
 
 // ------------------------------------
 // Plugins
@@ -245,7 +246,7 @@ webpackConfig.module.loaders.push(
   { test: /\.ttf(\?.*)?$/,   loader: 'url?prefix=fonts/&name=[path][name].[ext]&limit=10000&mimetype=application/octet-stream' },
   { test: /\.eot(\?.*)?$/,   loader: 'file?prefix=fonts/&name=[path][name].[ext]' },
   { test: /\.svg(\?.*)?$/,   loader: 'url?prefix=fonts/&name=[path][name].[ext]&limit=10000&mimetype=image/svg+xml' },
-  { test: /\.(png|jpg)$/,    loader: 'url?limit=8192' }
+  { test: /\.(png|jpg|gif)$/,    loader: 'url?limit=8192' }
 )
 /* eslint-enable */
 

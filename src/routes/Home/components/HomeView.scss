@@ -3,3 +3,32 @@
   width: 120px;
   margin: 1.5rem auto;
 }
+
+.container {
+  margin: 0 auto;
+  padding: 40px;
+  width: 100%;
+  color: #333;
+  background: #419be0;
+}
+
+
+.content4bi3 {
+  padding-bottom:67%;
+}
+
+.company {
+  .img {
+    float: left;
+    width: 50%;
+    
+  }
+  .text {
+    float: left;
+    width: 50%;
+    text-align: left;
+    .info {
+      font-size: 24px;
+    }
+  }
+}
