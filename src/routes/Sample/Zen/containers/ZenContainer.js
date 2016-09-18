@@ -2,7 +2,6 @@ import { connect } from 'react-redux'
 import { fetchZen, saveCurrentZen } from '../modules/zen'
 
 import { Zen } from '../components/Zen'
-//import { ZenObject } from '../interfaces/zen'
 
 const mapDispatchToProps = {
     fetchZen,

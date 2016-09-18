@@ -1,5 +1,3 @@
-//import type { ZenObject, ZenStateObject } from '../interfaces/zen'
-
 export const REQUEST_ZEN = 'REQUEST_ZEN'
 export const RECIEVE_ZEN = 'RECIEVE_ZEN'
 export const SAVE_CURRENT_ZEN = 'SAVE_CURRENT_ZEN'
