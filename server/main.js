@@ -16,6 +16,18 @@ const debug = _debug('app:server')
 const paths = config.utils_paths
 const app = new Koa()
 
+var contentType = require('content-type')
+var getRawBody = require('raw-body')
+app.use(convert(function * (next) {
+    this.text = yield getRawBody(this.req)
+    console.log ("this.text="+this.text);
+    yield next
+}))
+
+var bodyParser = require('koa-bodyparser');
+app.use(convert(bodyParser()));
+var json = require('koa-json');
+app.use(convert(json()));
 var koaRoute = require('koa-route');
 var apis = {
     getSignPackage: function *(){
@@ -26,7 +38,7 @@ var apis = {
     
     getSignPackage2: function *(name){
         if (name == "notfound") return this.throw('cannot find that pet', 404);
-        this.body = name;
+        this.body = {a:'aaaa', b:'bbbb'};
     }
 };
 app.use(convert(koaRoute.get('/apis/getSignPackage', apis.getSignPackage)));

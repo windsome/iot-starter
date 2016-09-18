@@ -19,7 +19,7 @@ const Tour = () => (
 
 const Message = () => (
   <div>
-    { 'Tour' }
+    { 'Msg' }
     {/*<span className="glyphicon glyphicon-envelope" aria-hidden="true"></span>*/}
     <i className={classNames(classes.icon, "glyphicon", "glyphicon-envelope")}>
       <i className={classNames(classes.numberBadge, "badge")}>1</i>
@@ -37,7 +37,7 @@ const Help = () => (
 const User = (props) => (
   <div>
     <span>{props.userName || 'Login'}</span>
-    <span className={classNames(classes.icon, "glyphicon")}><img src={props.avatar || './favicon.ico'} alt="..." className={classNames(classes.avatar, "img-circle")} /></span>
+    <span className={classNames(classes.icon, "glyphicon")}><img src={props.avatar || '/favicon.ico'} alt="..." className={classNames(classes.avatar, "img-circle")} /></span>
   </div>
 )
 
@@ -50,25 +50,25 @@ export const Header = (props) => (
     </div>
 
     <div className={classNames(classes.comp, "pull-right")}>
-    <Link to='/zen' activeClassName={classes.activeRoute}>
+    <Link to='/sample/zen' activeClassName={classes.activeRoute}>
       <User />
     </Link>
     </div>
 
     <div className={classNames(classes.comp, "pull-right")}>
-    <Link to='/counter' activeClassName={classes.activeRoute}>
+    <Link to='/sample/counter' activeClassName={classes.activeRoute}>
       <Help />
     </Link>
     </div>
 
     <div className={classNames(classes.comp, "pull-right")}>
-    <Link to='/counter' activeClassName={classes.activeRoute}>
+    <Link to='/sample/counter?b=1' activeClassName={classes.activeRoute}>
       <Message />
     </Link>
     </div>
 
     <div className={classNames(classes.comp, "pull-right")}>
-    <Link to='/counter' activeClassName={classes.activeRoute}>
+    <Link to='/sample/counter?a=1' activeClassName={classes.activeRoute}>
       <Tour />
     </Link>
     </div>

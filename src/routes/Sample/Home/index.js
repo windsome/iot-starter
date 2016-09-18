@@ -3,8 +3,8 @@
 // Sync route definition
 export default {
   component: HomeView
-}*/
-
+}
+*/
 
 export default (store) => ({
     getComponent(nextState, cb) {
@@ -16,3 +16,4 @@ export default (store) => ({
         }, 'home')
     }
 })
+

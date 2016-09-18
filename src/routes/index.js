@@ -1,84 +1,24 @@
 /*  Note: Instead of using JSX, we recommend using react-router
     PlainRoute objects to build route definitions.   */
-/*
+
 // We only need to import the modules necessary for initial render
-import CoreLayout from '../layouts/CoreLayout/CoreLayout'
-import Home from './Home'
-import CounterRoute from './Counter'
-import ZenRoute from './Zen'
+import EmptyLayout from '../layouts/EmptyLayout/EmptyLayout'
+import SampleRoute from './Sample'
 import IotRoute from './Iot'
 
 export const createRoutes = (store) => ({
   path: '/',
-  component: CoreLayout,
-  indexRoute: Home, 
+  component: EmptyLayout,
+  indexRoute: {
+      onEnter: function (nextState, replace) {
+          replace('sample/')
+      }
+  },
   childRoutes: [
-    CounterRoute(store),
-    ZenRoute(store),
+    SampleRoute(store),
     IotRoute(store)
   ]
 })
-*/
-
-import Home from './Home'
-import CounterRoute from './Counter'
-import ZenRoute from './Zen'
-import IotRoute from './Iot'
-
-export const createRoutes = (store) => ({
-  path: '/',
-    getComponent(nextState, cb) {
-        require.ensure([
-            '../layouts/CoreLayout/CoreLayout'
-        ], (require) => {
-            const CoreLayout = require('../layouts/CoreLayout/CoreLayout').default
-            cb(null, CoreLayout)
-        }, 'index')
-    },
-  indexRoute: Home, 
-  childRoutes: [
-    CounterRoute(store),
-    ZenRoute(store),
-    IotRoute(store)
-  ]
-})
-/*
-export const createRoutes = (store) => ({
-    path: '/',
-    getComponent(nextState, cb) {
-        require.ensure([
-            '../layouts/CoreLayout/CoreLayout'
-        ], (require) => {
-            const CoreLayout = require('../layouts/CoreLayout/CoreLayout').default
-            cb(null, CoreLayout)
-        }, 'index')
-    },
-    getIndexRoute(partialNextState, cb) {
-        // do something async here
-        //cb(null, myIndexRoute)
-        require.ensure([
-            './Home'
-        ], (require) => {
-            const Home = require('./Home').default
-            cb(null, Home)
-        })
-    },
-    getChildRoutes (location, cb) {
-      require.ensure([
-          './Counter',
-          './Zen',
-          './Iot'
-      ], (require) => {
-          cb(null, [
-              // Remove imports!
-              require('./Counter').default(store),
-              require('./Zen').default(store),
-              require('./Iot').default(store)
-          ])
-      })
-    }
-})
-*/
 /*  Note: childRoutes can be chunked or otherwise loaded programmatically
     using getChildRoutes with the following signature:
 

@@ -7,3 +7,7 @@ dist
 coverage
 
 .idea/
+
+access_token.json
+jsapi_ticket.json
+
