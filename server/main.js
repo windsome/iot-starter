@@ -9,10 +9,28 @@ import _debug from 'debug'
 import config from '../config'
 import webpackDevMiddleware from './middleware/webpack-dev'
 import webpackHMRMiddleware from './middleware/webpack-hmr'
+import JsSdk from './lib/wechat/JsSdk'
 
+const WechatJsSdk = new JsSdk ({appId:'wx1a6eca02cffc398c', appSecret:'e8bed04caeabe4129674a289847eb509', origin:'gh_9e62dd855eff'});
 const debug = _debug('app:server')
 const paths = config.utils_paths
 const app = new Koa()
+
+var koaRoute = require('koa-route');
+var apis = {
+    getSignPackage: function *(){
+        this.body = 'pets: ';
+        var pkg = WechatJsSdk.getSignPackage('http://lancertech.net/a.html');
+        console.log ("getSignPackage:"+JSON.stringify(pkg));
+    },
+    
+    getSignPackage2: function *(name){
+        if (name == "notfound") return this.throw('cannot find that pet', 404);
+        this.body = name;
+    }
+};
+app.use(convert(koaRoute.get('/apis/getSignPackage', apis.getSignPackage)));
+app.use(convert(koaRoute.get('/apis/getSignPackage/:name', apis.getSignPackage2)));
 
 // Enable koa-proxy if it has been enabled in the config.
 if (config.proxy && config.proxy.enabled) {
