@@ -68,7 +68,7 @@ export const Header = (props) => (
     </div>
 
     <div className={classNames(classes.comp, "pull-right")}>
-    <Link to='/sample/counter?a=1' activeClassName={classes.activeRoute}>
+    <Link to='/iot' activeClassName={classes.activeRoute}>
       <Tour />
     </Link>
     </div>
