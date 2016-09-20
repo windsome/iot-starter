@@ -8,7 +8,7 @@ export const Zen = (props) => (
       {props.zen ? props.zen.value : ''}
     </h2>
     <button className='btn btn-default' onClick={props.fetchZen}>
-        Fetch a wisdom
+        { 'Fetch a wisdom: ' } { props.signpkg?JSON.stringify(props.signpkg):'' }
     </button>
     {' '}
     <button className='btn btn-default' onClick={props.saveCurrentZen}>
@@ -33,5 +33,6 @@ Zen.propTypes = {
     zen:React.PropTypes.object,
     saved: React.PropTypes.array.isRequired,
     fetchZen: React.PropTypes.func.isRequired,
-    saveCurrentZen: React.PropTypes.func.isRequired
+    saveCurrentZen: React.PropTypes.func.isRequired,
+    signpkg:React.PropTypes.object
 }

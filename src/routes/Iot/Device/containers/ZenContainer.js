@@ -9,8 +9,9 @@ const mapDispatchToProps = {
 }
 
 const mapStateToProps = (state) => ({
-    zen: state.iot.zens.find(zen => zen.id === state.iot.current),
-    saved: state.iot.zens.filter(zen => state.iot.saved.indexOf(zen.id) !== -1)
+    zen: state.zen.zens.find(zen => zen.id === state.zen.current),
+    saved: state.zen.zens.filter(zen => state.zen.saved.indexOf(zen.id) !== -1),
+    signpkg: state.sign.pkg
 })
 
 export default connect(mapStateToProps, mapDispatchToProps)(Zen)

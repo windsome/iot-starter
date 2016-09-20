@@ -37,17 +37,16 @@ export const createRoutes = (store) => ({
         }, 'sample')
     },
     onEnter: function () {
-        console.log ("enter sample");
         injectReducer(store, { key:'sign', reducer:signReducer })
-        console.log ("location onEnter:");
-        console.log (location.href);
-        console.log (store.getState());
+        //console.log ("location onEnter:");
+        //console.log (location.href);
+        //console.log (store.getState());
         store.dispatch(fetchSign (location.href));
     },
     onChange: function (prevState, nextState, replace) {
-        console.log ("location onChange:");
-        console.log (location.href);
-        console.log (store.getState());
+        //console.log ("location onChange:");
+        //console.log (location.href);
+        //console.log (store.getState());
         store.dispatch(fetchSign (location.href));
     },
   indexRoute: Home(store), 

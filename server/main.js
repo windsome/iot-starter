@@ -19,21 +19,26 @@ const app = new Koa()
 var contentType = require('content-type')
 var getRawBody = require('raw-body')
 app.use(convert(function * (next) {
-    this.text = yield getRawBody(this.req)
-    console.log ("this.text="+this.text);
+    //var rawText = yield getRawBody(this.req)
+    var rawText = "";
+    console.log ("["+this.req.method+"]["+this.req.url+"] "+rawText);
+    //this.request.body = JSON.parse(rawText);
     yield next
 }))
 
 var bodyParser = require('koa-bodyparser');
 app.use(convert(bodyParser()));
-var json = require('koa-json');
-app.use(convert(json()));
+
+//var json = require('koa-json'); // response json body.
+//app.use(convert(json()));
 var koaRoute = require('koa-route');
 var apis = {
     getSignPackage: function *(){
-        this.body = 'pets: ';
-        var pkg = WechatJsSdk.getSignPackage('http://lancertech.net/a.html');
-        console.log ("getSignPackage:"+JSON.stringify(pkg));
+        console.log ("body:"+JSON.stringify(this.request.body));
+        var url = this.request.body.url;
+        var pkg = WechatJsSdk.getSignPackage(url);
+        console.log ("url="+url+", getSignPackage:"+JSON.stringify(pkg));
+        this.body = pkg;
     },
     
     getSignPackage2: function *(name){
@@ -41,7 +46,7 @@ var apis = {
         this.body = {a:'aaaa', b:'bbbb'};
     }
 };
-app.use(convert(koaRoute.get('/apis/getSignPackage', apis.getSignPackage)));
+app.use(convert(koaRoute.all('/apis/getSignPackage', apis.getSignPackage)));
 app.use(convert(koaRoute.get('/apis/getSignPackage/:name', apis.getSignPackage2)));
 
 // Enable koa-proxy if it has been enabled in the config.

@@ -10,7 +10,8 @@ const mapDispatchToProps = {
 
 const mapStateToProps = (state) => ({
     zen: state.zen.zens.find(zen => zen.id === state.zen.current),
-    saved: state.zen.zens.filter(zen => state.zen.saved.indexOf(zen.id) !== -1)
+    saved: state.zen.zens.filter(zen => state.zen.saved.indexOf(zen.id) !== -1),
+    signpkg: state.sign.pkg
 })
 
 export default connect(mapStateToProps, mapDispatchToProps)(Zen)
