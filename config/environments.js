@@ -11,10 +11,18 @@ export default {
   development: (config) => ({
     compiler_public_path: `http://${config.server_host}:${config.server_port}/`,
     proxy: {
-      enabled: false,
+      enabled: true,
       options: {
-        host: 'http://localhost:8000',
-        match: /^\/api\/.*/
+        host: 'http://lancertech.net',
+        match: /^\/bpi\/.*/,
+        map: function(path) {
+            var re = /(^\/bpi\/)(.*)/;
+            var newstr = path.replace(re, "/farm/douchat/index.php?s=/Home/$2");
+            // TODO: every request url comes here! why? 
+            // match & map, which priority is higher?
+            //console.log ("windsome: newpath="+newstr);
+            return newstr;
+        }
       }
     }
   }),

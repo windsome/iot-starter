@@ -41,6 +41,7 @@ JsSdk.prototype.getSignPackage = function getSignPackage(url) {
     var jsSHA = require('jssha');
     var shaObj = new jsSHA(string, 'TEXT');
     ret.signature = shaObj.getHash('SHA-1', 'HEX');
+    ret.appId = this.appId;
     
     return ret;
 }
