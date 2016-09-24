@@ -31,8 +31,16 @@ app.use(convert(bodyParser()));
 
 //var json = require('koa-json'); // response json body.
 //app.use(convert(json()));
-var routerApi1 = require('./lib/router-apis-wechat')({router:{prefix: '/apis'}, jssdk:WechatJsSdk});
+
+var koajwt = require('koa-jwt');
+var token = koajwt.sign({ id: 123 }, 'mysecret', { expiresIn: 60*60 });
+console.log ("token", token);
+//app.use(convert(koajwt({ secret: 'mysecret' })));
+
+var routerApi1 = require('./lib/router-apis-wechat')({router:{prefix: '/apis'}, jwt: {secret: 'mysecret' }, jssdk:WechatJsSdk});
+//routerApi1.use(convert(koajwt({ secret: 'mysecret' })));
 app.use(routerApi1.routes()).use(routerApi1.allowedMethods());
+
 /*
 var koajwt = require('koa-jwt');
 var token = koajwt.sign({ id: 123 }, 'mysecret', { expiresIn: 60*60 });
@@ -92,5 +100,11 @@ if (config.env === 'development') {
   // server in production.
   app.use(serve(paths.dist()))
 }
+
+app.use(function (ctx, next) {
+    var rawText = "";
+    console.log ("not done! ["+ctx.req.method+"]["+ctx.req.url+"] "+rawText);
+    //this.request.body = JSON.parse(rawText);
+})
 
 export default app

@@ -18,9 +18,13 @@ function WechatApi(opts) {
         return new WechatApi(opts);
     }
     this.opts = opts || {};
-    var routerOpts = this.opts.router;
-    var JsSdk = this.opts.jssdk;
-    var router = require('koa-router')(routerOpts);
+    var router = require('koa-router')(this.opts.router);
+    if (this.opts.jwt) {
+        console.log ("windsome", this.opts.jwt);
+        var convert = require('koa-convert');
+        var koajwt = require('koa-jwt');
+        router.use(convert(koajwt({ secret: 'mysecret' })));
+    }
     //console.log ("windsome:", routerOpts, JsSdk, router);
     router.all('/getSignPackage', this.getSignPackage());
     router.get('/getSignPackage/:name', this.getSignPackage2);

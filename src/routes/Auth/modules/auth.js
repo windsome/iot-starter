@@ -29,7 +29,7 @@ export const handleLogin = (user) => {
         //console.log (user);
         var myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/json; charset=utf-8");
-        myHeaders.append("Authorization", "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MTIzLCJpYXQiOjE0NzQ1NjQwNzIsImV4cCI6MTQ3NDU4MjA3Mn0.EdCUneYZxwHUT4tzjXcJ2FtxR8bCzSbWSWqpVIe-5d4");
+        myHeaders.append("Authorization", "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MTIzLCJpYXQiOjE0NzQ3MjEzMDMsImV4cCI6MTQ3NDcyNDkwM30.nML-8UQ8_ye8RyzpNuPTB7LH4zwSBariylkJna7AuaM");
         
         return fetch("/apis/login", 
                      { method: 'POST',
