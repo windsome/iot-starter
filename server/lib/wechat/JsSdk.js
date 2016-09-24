@@ -1,3 +1,15 @@
+/**
+ * @file   JsSdk.js
+ * @author windsome.feng <86643838@163.com>
+ * @date   Wed Sep 21 10:34:35 2016
+ * 
+ * @brief  微信公众号SDK服务器端代码，用于获取URL签名
+ *         允许微信中网页通过JS调用微信的功能，包含菜单的功能，转发，拍照，GPS等。
+ * 
+ * 
+ */
+
+// 
 var fs = require('fs');
 var SyncRequest = require('sync-request');
 
@@ -7,7 +19,7 @@ function JsSdk (options) {
     var opts = options || {};
     this.appId = opts.appId;
     this.appSecret = opts.appSecret;
-    this.debug = opts.debug;
+    this.debug = opts.debug || false;
 
 }
 

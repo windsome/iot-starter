@@ -31,23 +31,23 @@ app.use(convert(bodyParser()));
 
 //var json = require('koa-json'); // response json body.
 //app.use(convert(json()));
-var koaRoute = require('koa-route');
-var apis = {
-    getSignPackage: function *(){
-        console.log ("body:"+JSON.stringify(this.request.body));
-        var url = this.request.body.url;
-        var pkg = WechatJsSdk.getSignPackage(url);
-        console.log ("url="+url+", getSignPackage:"+JSON.stringify(pkg));
-        this.body = pkg;
-    },
-    
-    getSignPackage2: function *(name){
-        if (name == "notfound") return this.throw('cannot find that pet', 404);
-        this.body = {a:'aaaa', b:'bbbb'};
-    }
-};
-app.use(convert(koaRoute.all('/apis/getSignPackage', apis.getSignPackage)));
-app.use(convert(koaRoute.get('/apis/getSignPackage/:name', apis.getSignPackage2)));
+var routerApi1 = require('./lib/router-apis-wechat')({router:{prefix: '/apis'}, jssdk:WechatJsSdk});
+app.use(routerApi1.routes()).use(routerApi1.allowedMethods());
+/*
+var koajwt = require('koa-jwt');
+var token = koajwt.sign({ id: 123 }, 'mysecret', { expiresIn: 60*60 });
+console.log ("token", token);
+app.use(convert(koajwt({ secret: 'mysecret' })));
+//app.use(jwt({ secret: 'shared-secret' }).unless({ path: [/^\/public/] }));
+//app.use(jwt({ secret: publicKey }));
+app.use(convert(function *(){
+  if (this.url.match(/^\/apis/)) {
+    this.body = {wokao:"protected", cao:"11"};
+  } else {
+    this.body = {wokao:'xxxx'};
+  }
+}));
+*/
 
 // Enable koa-proxy if it has been enabled in the config.
 if (config.proxy && config.proxy.enabled) {

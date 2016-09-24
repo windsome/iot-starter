@@ -5,6 +5,7 @@
 import EmptyLayout from '../layouts/EmptyLayout/EmptyLayout'
 import SampleRoute from './Sample'
 import IotRoute from './Iot'
+import AuthRoute from './Auth'
 
 export const createRoutes = (store) => ({
   path: '/',
@@ -16,7 +17,8 @@ export const createRoutes = (store) => ({
   },
   childRoutes: [
     SampleRoute(store),
-    IotRoute(store)
+    IotRoute(store),
+    AuthRoute(store)
   ]
 })
 /*  Note: childRoutes can be chunked or otherwise loaded programmatically
