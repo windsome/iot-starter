@@ -1,3 +1,5 @@
+import 'whatwg-fetch';
+
 export const REQUEST_SIGN = 'REQUEST_SIGN'
 export const RECIEVE_SIGN = 'RECIEVE_SIGN'
 export const SAVE_CURRENT_SIGN = 'SAVE_CURRENT_SIGN'
@@ -19,7 +21,7 @@ export function recieveSign (value) {
         }
     }
 }
-
+/*
 export const fetchSign = (url) => {
     return (dispatch) => {
         dispatch(requestSign(url))
@@ -27,6 +29,22 @@ export const fetchSign = (url) => {
         var myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/json");
         return fetch('/apis/getSignPackage', { method: "POST", headers: myHeaders, body: JSON.stringify({ url:url }) })
+            .then(data => data.json())
+            .then(text => dispatch(recieveSign(text)))
+            .catch((error) => {
+                console.log('fetch error: ' + error.message);
+                dispatch(recieveSign({}))
+            });
+    }
+}
+*/
+export const fetchSign = (url) => {
+    return (dispatch) => {
+        dispatch(requestSign(url))
+
+        //var myHeaders = new Headers();
+        //myHeaders.append("Content-Type", "application/json");
+        return fetch('/apis/getSignPackage', { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({ url:url }) })
             .then(data => data.json())
             .then(text => dispatch(recieveSign(text)))
             .catch((error) => {

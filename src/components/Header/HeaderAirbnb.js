@@ -41,6 +41,15 @@ const User = (props) => (
   </div>
 )
 
+const Auth2Url = (url) => {
+    var redirect_uri = url || "http://www.lancertech.net";
+    redirect_uri = encodeURIComponent(redirect_uri);
+    var state = "1";
+    var next_url = "http://lancertech.net/get-weixin-code.html?appid=wx1a6eca02cffc398c&scope=snsapi_base&state="+state+"&redirect_uri="+redirect_uri;
+    console.log ("next_url:", next_url);
+    return next_url;
+}
+
 export const Header = (props) => (
   <div className={classes.airbnbHeader}>
     <div className={classNames(classes.comp, "pull-left")}>
@@ -50,9 +59,9 @@ export const Header = (props) => (
     </div>
 
     <div className={classNames(classes.comp, "pull-right")}>
-    <Link to='/sample/zen' activeClassName={classes.activeRoute}>
+    <a href={Auth2Url()} >
       <User />
-    </Link>
+    </a>
     </div>
 
     <div className={classNames(classes.comp, "pull-right")}>
@@ -62,7 +71,7 @@ export const Header = (props) => (
     </div>
 
     <div className={classNames(classes.comp, "pull-right")}>
-    <Link to='/sample/counter?b=1' activeClassName={classes.activeRoute}>
+    <Link to='/sample/zen' activeClassName={classes.activeRoute}>
       <Message />
     </Link>
     </div>

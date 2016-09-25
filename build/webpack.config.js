@@ -24,7 +24,8 @@ const webpackConfig = {
 // Entry Points
 // ------------------------------------
 const APP_ENTRY_PATHS = [
-  paths.client('main.js')
+    'whatwg-fetch',
+    paths.client('main.js')
 ]
 
 webpackConfig.entry = {

@@ -1,3 +1,5 @@
+import 'whatwg-fetch';
+
 export const LOGIN_REQUEST = 'LOGIN_REQUEST'
 export const LOGIN_SUCCESS = 'LOGIN_SUCCESS'
 export const LOGIN_FAILURE = 'LOGIN_FAILURE'
@@ -21,7 +23,7 @@ export function loginFailure (error) {
         error
     }
 }
-
+/*
 export const handleLogin = (user) => {
     return (dispatch) => {
         dispatch(loginRequest())
@@ -34,6 +36,27 @@ export const handleLogin = (user) => {
         return fetch("/apis/login", 
                      { method: 'POST',
                        headers: myHeaders,
+                       mode: 'cors',
+                       cache: 'default',
+                       body: JSON.stringify(user) })
+            .then(data => data.json())
+            .then(retcode => dispatch(loginSuccess(retcode)))
+            .catch((error) => {
+                console.log('fetch error: ' + error.message);
+                dispatch(loginFailure({ errcode: -1, msg: error.message }))
+            });
+    }
+}
+*/
+export const handleLogin = (user) => {
+    return (dispatch) => {
+        dispatch(loginRequest())
+        
+        return fetch("/apis/login", 
+                     { method: 'POST',
+                       headers: { "Content-Type": "application/json; charset=utf-8",
+                                  "Authorization": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MTIzLCJpYXQiOjE0NzQ3MjEzMDMsImV4cCI6MTQ3NDcyNDkwM30.nML-8UQ8_ye8RyzpNuPTB7LH4zwSBariylkJna7AuaM"
+                       },
                        mode: 'cors',
                        cache: 'default',
                        body: JSON.stringify(user) })

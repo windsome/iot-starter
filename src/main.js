@@ -10,12 +10,12 @@ import AppContainer from './containers/AppContainer'
 // ========================================================
 // Browser History Setup
 // ========================================================
-//const browserHistory = useRouterHistory(createBrowserHistory)({
-//  basename: __BASENAME__
-//})
-const browserHistory = useRouterHistory(createHashHistory)({
+const browserHistory = useRouterHistory(createBrowserHistory)({
   basename: __BASENAME__
 })
+//const browserHistory = useRouterHistory(createHashHistory)({
+//  basename: __BASENAME__
+//})
 
 // ========================================================
 // Store and History Instantiation
@@ -90,4 +90,8 @@ if (__DEV__) {
 // ========================================================
 // Go!
 // ========================================================
+try {
 render()
+} catch (e) {
+    console.log (e);
+}

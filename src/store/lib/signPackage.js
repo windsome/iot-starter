@@ -1,3 +1,5 @@
+import 'whatwg-fetch';
+
 export const REQUEST_SIGN = 'REQUEST_SIGN'
 export const RECIEVE_SIGN = 'RECIEVE_SIGN'
 export const WX_CONFIG_OK = 'WX_CONFIG_OK'
@@ -98,7 +100,7 @@ function wxConfig (dispatch, pkg) {
         });
     console.log ("after wxConfig");
 }
-
+/*
 export const fetchSign = (url) => {
     return (dispatch) => {
         dispatch(requestSign(url))
@@ -106,6 +108,23 @@ export const fetchSign = (url) => {
         var myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/json");
         return fetch('/apis/getSignPackage', { method: "POST", headers: myHeaders, body: JSON.stringify({ url:url }) })
+            .then(data => data.json())
+            .then((pkg) => {
+                dispatch(recieveSign(pkg));
+                wxConfig (dispatch,pkg);
+            })
+            .catch((error) => {
+                console.log('fetch error: ' + error.message);
+                dispatch(recieveSign({}))
+            });
+    }
+}
+*/
+export const fetchSign = (url) => {
+    return (dispatch) => {
+        dispatch(requestSign(url))
+
+        return fetch('/apis/getSignPackage', { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({ url:url }) })
             .then(data => data.json())
             .then((pkg) => {
                 dispatch(recieveSign(pkg));
