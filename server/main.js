@@ -11,10 +11,20 @@ import webpackDevMiddleware from './middleware/webpack-dev'
 import webpackHMRMiddleware from './middleware/webpack-hmr'
 import JsSdk from './lib/wechat/JsSdk'
 
+//import Oauth2Router from './lib/oauth2-wechat'
+
 const WechatJsSdk = new JsSdk ({appId:'wx1a6eca02cffc398c', appSecret:'e8bed04caeabe4129674a289847eb509', origin:'gh_9e62dd855eff'});
 const debug = _debug('app:server')
 const paths = config.utils_paths
 const app = new Koa()
+
+var session = require('koa-generic-session');
+var RedisStore = require('koa-redis');
+app.keys = ['keys', 'keykeys'];
+app.use(convert(session({
+  store: new RedisStore()
+})));
+
 
 var contentType = require('content-type')
 var getRawBody = require('raw-body')
@@ -31,6 +41,11 @@ app.use(convert(bodyParser()));
 
 //var json = require('koa-json'); // response json body.
 //app.use(convert(json()));
+
+var oauth2Router = require('./lib/oauth2-wechat')({ appId:'wx1a6eca02cffc398c', appSecret:'e8bed04caeabe4129674a289847eb509', router:{prefix: '/apis'} });
+//var oauth2Router = Oauth2Router({ appId:'wx1a6eca02cffc398c', appSecret:'e8bed04caeabe4129674a289847eb509', router:{prefix: '/apis'} });
+app.use(oauth2Router.getOpenId());
+app.use(oauth2Router.routes()).use(oauth2Router.allowedMethods());
 
 var koajwt = require('koa-jwt');
 var token = koajwt.sign({ id: 123 }, 'mysecret', { expiresIn: 60*60 });

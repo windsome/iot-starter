@@ -1,4 +1,4 @@
-import 'whatwg-fetch';
+//import 'whatwg-fetch';
 
 export const REQUEST_SIGN = 'REQUEST_SIGN'
 export const RECIEVE_SIGN = 'RECIEVE_SIGN'
