@@ -42,7 +42,8 @@ const User = (props) => (
 )
 
 const Auth2Url = (url) => {
-    var redirect_uri = url || "http://www.lancertech.net";
+    //var redirect_uri = url || "http://www.lancertech.net";
+    var redirect_uri = location.href;
     redirect_uri = encodeURIComponent(redirect_uri);
     var state = "1";
     var next_url = "http://lancertech.net/get-weixin-code.html?appid=wx1a6eca02cffc398c&scope=snsapi_base&state="+state+"&redirect_uri="+redirect_uri;
@@ -65,7 +66,7 @@ export const Header = (props) => (
     </div>
 
     <div className={classNames(classes.comp, "pull-right")}>
-    <Link to='/sample/counter' activeClassName={classes.activeRoute}>
+    <Link to='/auth/login' activeClassName={classes.activeRoute}>
       <Help />
     </Link>
     </div>

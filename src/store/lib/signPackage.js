@@ -37,8 +37,7 @@ export function wxConfigFail (err) {
 }
 
 function wxConfig (dispatch, pkg) {
-    console.log ("wxConfig:");
-    console.log (wx);
+    console.log ("wxConfig:", wx);
         wx.config({
             beta:true,
             debug: true,

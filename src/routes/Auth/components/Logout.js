@@ -30,7 +30,7 @@ export class DeviceList extends Component {
 
     render () {
         var props = this.props;
-        console.log (this.props);
+        console.log ("Auth/Logout",this.props);
         return (
 <div>
   <div>

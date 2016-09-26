@@ -10,8 +10,10 @@ import config from '../config'
 import webpackDevMiddleware from './middleware/webpack-dev'
 import webpackHMRMiddleware from './middleware/webpack-hmr'
 import JsSdk from './lib/wechat/JsSdk'
+import 'isomorphic-fetch';
 
-//import Oauth2Router from './lib/oauth2-wechat'
+import Oauth2Api from './lib/oauth2-wechat';
+import WechatApi from './lib/router-apis-wechat';
 
 const WechatJsSdk = new JsSdk ({appId:'wx1a6eca02cffc398c', appSecret:'e8bed04caeabe4129674a289847eb509', origin:'gh_9e62dd855eff'});
 const debug = _debug('app:server')
@@ -42,35 +44,11 @@ app.use(convert(bodyParser()));
 //var json = require('koa-json'); // response json body.
 //app.use(convert(json()));
 
-var oauth2Router = require('./lib/oauth2-wechat')({ appId:'wx1a6eca02cffc398c', appSecret:'e8bed04caeabe4129674a289847eb509', router:{prefix: '/apis'} });
-//var oauth2Router = Oauth2Router({ appId:'wx1a6eca02cffc398c', appSecret:'e8bed04caeabe4129674a289847eb509', router:{prefix: '/apis'} });
-app.use(oauth2Router.getOpenId());
-app.use(oauth2Router.routes()).use(oauth2Router.allowedMethods());
+var routerOauth2 = new Oauth2Api ({ jssdk: WechatJsSdk, router:{prefix: '/apis'} });
+app.use(routerOauth2.router.routes()).use(routerOauth2.router.allowedMethods());
 
-var koajwt = require('koa-jwt');
-var token = koajwt.sign({ id: 123 }, 'mysecret', { expiresIn: 60*60 });
-console.log ("token", token);
-//app.use(convert(koajwt({ secret: 'mysecret' })));
-
-var routerApi1 = require('./lib/router-apis-wechat')({router:{prefix: '/apis'}, jwt: {secret: 'mysecret' }, jssdk:WechatJsSdk});
-//routerApi1.use(convert(koajwt({ secret: 'mysecret' })));
-app.use(routerApi1.routes()).use(routerApi1.allowedMethods());
-
-/*
-var koajwt = require('koa-jwt');
-var token = koajwt.sign({ id: 123 }, 'mysecret', { expiresIn: 60*60 });
-console.log ("token", token);
-app.use(convert(koajwt({ secret: 'mysecret' })));
-//app.use(jwt({ secret: 'shared-secret' }).unless({ path: [/^\/public/] }));
-//app.use(jwt({ secret: publicKey }));
-app.use(convert(function *(){
-  if (this.url.match(/^\/apis/)) {
-    this.body = {wokao:"protected", cao:"11"};
-  } else {
-    this.body = {wokao:'xxxx'};
-  }
-}));
-*/
+var routerApi2 = new WechatApi({ router:{prefix: '/apis'}, jwt: {secret: 'mysecret', expiresIn:3600 }, jssdk:WechatJsSdk });
+app.use(routerApi2.router.routes()).use(routerApi2.router.allowedMethods());
 
 // Enable koa-proxy if it has been enabled in the config.
 if (config.proxy && config.proxy.enabled) {

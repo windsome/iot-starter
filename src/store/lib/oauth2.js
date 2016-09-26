@@ -4,6 +4,10 @@ export const OAUTH2_REQUEST = 'OAUTH2_REQUEST'
 export const OAUTH2_SUCCESS = 'OAUTH2_SUCCESS'
 export const OAUTH2_FAILURE = 'OAUTH2_FAILURE'
 
+export const USER_REQUEST = 'USER_REQUEST'
+export const USER_SUCCESS = 'USER_SUCCESS'
+export const USER_FAILURE = 'USER_FAILURE'
+
 export function oauth2Request () {
     return {
         type: OAUTH2_REQUEST
@@ -24,23 +28,74 @@ export function oauth2Failure (error) {
     }
 }
 
-export const handleOauth2 = (user) => {
+export const handleOauth2 = (scope) => {
     return (dispatch) => {
         dispatch(oauth2Request())
         
-        return fetch("/apis/oauth2", 
+        return fetch("/apis/getState", 
                      { method: 'POST',
-                       headers: { "Content-Type": "application/json; charset=utf-8",
-                                  "Authorization": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MTIzLCJpYXQiOjE0NzQ3MjEzMDMsImV4cCI6MTQ3NDcyNDkwM30.nML-8UQ8_ye8RyzpNuPTB7LH4zwSBariylkJna7AuaM"
+                       headers: { 
+                           "Content-Type": "application/json; charset=utf-8"
                        },
                        mode: 'cors',
                        cache: 'default',
-                       body: JSON.stringify(user) })
+                       body: JSON.stringify({ scope: scope}) })
             .then(data => data.json())
-            .then(retcode => dispatch(oauth2Success(retcode)))
+            .then((retcode) => {
+                var redirect_uri = location.href;
+                redirect_uri = encodeURIComponent(redirect_uri);
+                var next_url = "http://lancertech.net/get-weixin-code.html?appid="+retcode.appid+"&scope="+retcode.scope+"&state="+retcode.state+"&redirect_uri="+redirect_uri;
+                console.log ("next_url:", next_url);
+                location.href = next_url;
+                dispatch(oauth2Success(retcode))
+            })
             .catch((error) => {
                 console.log('fetch error: ' + error.message);
                 dispatch(oauth2Failure({ errcode: -1, msg: error.message }))
+            });
+    }
+}
+
+export function userRequest () {
+    return {
+        type: USER_REQUEST
+    }
+}
+
+export function userSuccess (value) {
+    return {
+        type: USER_SUCCESS,
+        payload: value
+    }
+}
+
+export function userFailure (error) {
+    return {
+        type: USER_FAILURE,
+        error
+    }
+}
+
+export const fetchUser = (cfg) => {
+    return (dispatch) => {
+        dispatch(userRequest())
+        
+        return fetch("/apis/getUserInfo", 
+                     { method: 'POST',
+                       headers: { 
+                           "Content-Type": "application/json; charset=utf-8"
+                       },
+                       mode: 'cors',
+                       cache: 'default',
+                       body: JSON.stringify({ code: cfg.code, state: cfg.state}) })
+            .then(data => data.json())
+            .then((retcode) => {
+                console.log ("fetchUser", retcode);
+                dispatch(userSuccess(retcode))
+            })
+            .catch((error) => {
+                console.log('fetch error: ' + error.message);
+                dispatch(userFailure({ errcode: -1, msg: error.message }))
             });
     }
 }
@@ -49,16 +104,23 @@ export const actions = {
     oauth2Request,
     oauth2Success,
     oauth2Failure,
-    handleOauth2
+    handleOauth2,
+    userRequest,
+    userSuccess,
+    userFailure,
+    fetchUser
 }
 
 const OAUTH2_ACTION_HANDLERS = {
     [OAUTH2_REQUEST]: (state) => { return ({ ...state, fetching: true, error:null })},
-    [OAUTH2_SUCCESS]: (state, action) => { return ({ ...state, ooauth2: action.payload, fetching: false, error:null }) },
-    [OAUTH2_FAILURE]: (state, action) => { return ({ ...state, ooauth2: null, fetching: false, error: action.error }) }
+    [OAUTH2_SUCCESS]: (state, action) => { return ({ ...state, oauth2: action.payload, fetching: false, error:null }) },
+    [OAUTH2_FAILURE]: (state, action) => { return ({ ...state, oauth2: null, fetching: false, error: action.error }) },
+    [USER_REQUEST]: (state) => { return ({ ...state, fetching: true, error:null })},
+    [USER_SUCCESS]: (state, action) => { return ({ ...state, oauth2: action.payload, fetching: false, error:null }) },
+    [USER_FAILURE]: (state, action) => { return ({ ...state, oauth2: null, fetching: false, error: action.error }) }
 }
 
-const initialState = { fetching: false, ooauth2: null, error: null }
+const initialState = { fetching: false, oauth2: null, error: null }
 export default function oauth2Reducer(state = initialState, action) {
     const handler = OAUTH2_ACTION_HANDLERS[action.type]
     return handler ? handler(state, action) : state

@@ -151,3 +151,18 @@ JsSdk.prototype._getAccessToken = function _getAccessToken() {
     }
     return data.access_token;
 }
+
+JsSdk.prototype.getOauthAccessToken = async function (code) {
+    var ret;
+    try {
+        var res = await fetch('https://api.weixin.qq.com/sns/oauth2/access_token?appid='+this.appId+'&secret='+this.appSecret+'&code='+code+'&grant_type=authorization_code');
+        ret = res.json();
+    } catch (error) { 
+        console.log('fetch error: ' + error.message);
+        ret = {
+            retcode: -1,
+            message: error.message
+        };
+    }
+    return ret;
+}

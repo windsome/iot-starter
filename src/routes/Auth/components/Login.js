@@ -9,9 +9,9 @@ export class LoginForm extends Component {
     }
 
     render () {
-        const { handleSubmit, handleLogin, pristine, reset, submitting, auth } = this.props;
+        const { handleSubmit, handleLogin, handleOauth2, pristine, reset, submitting, auth } = this.props;
         var props = this.props;
-        console.log (this.props);
+        console.log ("Auth/Login", this.props);
 
         var error = auth && auth.error && JSON.stringify(auth.error) || '';
         var token = auth && auth.token && JSON.stringify(auth.token) || '';
@@ -34,6 +34,7 @@ export class LoginForm extends Component {
       <div>
         <button type="submit" disabled={pristine || submitting}>Submit</button>
         <button type="button" disabled={pristine || submitting} onClick={reset}>Clear Values</button>
+        <button type="button" onClick={handleOauth2.bind(undefined, "snsapi_base")}>Login Wechat</button>
       </div>
       <div> { error }
       </div>

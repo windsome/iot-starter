@@ -1,12 +1,14 @@
 import { connect } from 'react-redux'
 import { fetchZen, saveCurrentZen } from '../modules/zen'
 import { handleLogin } from '../modules/auth'
+import { handleOauth2 } from '../../../store/lib/oauth2'
 import LoginForm from '../components/Login'
 
 const mapDispatchToProps = {
     fetchZen,
     saveCurrentZen,
-    handleLogin
+    handleLogin,
+    handleOauth2
 }
 
 const mapStateToProps = (state) => ({

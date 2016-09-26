@@ -6,7 +6,8 @@ import { useRouterHistory } from 'react-router'
 import { syncHistoryWithStore } from 'react-router-redux'
 import createStore from './store/createStore'
 import AppContainer from './containers/AppContainer'
-import 'whatwg-fetch';
+//import 'whatwg-fetch';
+import 'isomorphic-fetch';
 
 // ========================================================
 // Browser History Setup
@@ -94,5 +95,5 @@ if (__DEV__) {
 try {
 render()
 } catch (e) {
-    console.log (e);
+    console.log ("main", e);
 }
