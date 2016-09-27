@@ -107,7 +107,7 @@ JsSdk.prototype._getJsApiTicket = function _getJsApiTicket() {
     }
 }
 
-JsSdk.prototype._getAccessToken = function _getAccessToken() {
+JsSdk.prototype._getAccessToken = function () {
     if (this.debug) {
         console.log ("where store data?");
     }
@@ -162,6 +162,23 @@ JsSdk.prototype.getOauthAccessToken = async function (code) {
         ret = {
             retcode: -1,
             message: error.message
+        };
+    }
+    return ret;
+}
+
+JsSdk.prototype.getBindDevice = async function (openid) {
+    var ret;
+    try {
+        var access_token = await this._getAccessToken();
+        var url = 'https://api.weixin.qq.com/device/get_bind_device?access_token=ACCESS_TOKEN&openid=OPENID'.replace(/ACCESS_TOKEN/g, access_token).replace(/OPENID/g, openid);
+        var res = await fetch (url);
+        ret = res.json();
+    } catch (error) { 
+        console.log('fetch error: ' + error.message);
+        ret = {
+            retcode: -1,
+            errmsg: error.message
         };
     }
     return ret;

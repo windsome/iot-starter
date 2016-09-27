@@ -1,3 +1,4 @@
+import { IndexLink, Link } from 'react-router'
 import React, { Component, PropTypes } from 'react'
 import { Field, reduxForm } from 'redux-form'
 import classes from './Login.scss'
@@ -36,6 +37,10 @@ export class LoginForm extends Component {
         <button type="button" disabled={pristine || submitting} onClick={reset}>Clear Values</button>
         <button type="button" onClick={handleOauth2.bind(undefined, "snsapi_base")}>Login Wechat</button>
       </div>
+      <Link to='/iot/device/list'>
+        <div> DeviceList </div>
+      </Link>
+
       <div> { error }
       </div>
       <div> { token }

@@ -17,13 +17,17 @@ export default class WechatApi {
         this.opts = opts || {};
         var router = require('koa-router')(this.opts.router);
         router.all('/getJwt', this.getJwt());
-        if (this.opts.jwt) {
-            console.log ("windsome", this.opts.jwt);
-            var convert = require('koa-convert');
-            router.use(convert(KoaJwt({ secret: this.opts.jwt.secret })));
-        }
+        //if (this.opts.jwt) {
+        //    console.log ("windsome", this.opts.jwt);
+        //    var convert = require('koa-convert');
+        //    router.use(convert(KoaJwt({ secret: this.opts.jwt.secret })));
+        //}
+
         //console.log ("windsome:", routerOpts, JsSdk, router);
         router.all('/getSignPackage', this.getSignPackage());
+
+        router.all('/device/get_bind_device', this.getBindDevice());
+
         router.get('/getSignPackage/:name', this.getSignPackage2);
         router.all('/login', this.login);
         this.router = router;
@@ -46,6 +50,7 @@ export default class WechatApi {
             ctx.body = { jwt: token };
         };
     }
+
     getSignPackage () {
         var WechatJsSdk = this.opts.jssdk;
         return (ctx, next) => {
@@ -53,6 +58,17 @@ export default class WechatApi {
             var url = ctx.request.body.url;
             var pkg = WechatJsSdk.getSignPackage(url);
             console.log ("url="+url+", getSignPackage:"+JSON.stringify(pkg));
+            ctx.body = pkg;
+        };
+    }
+
+    getBindDevice () {
+        var WechatJsSdk = this.opts.jssdk;
+        return async (ctx, next) => {
+            var oauth2 = ctx.session.oauth2;
+            var openid = oauth2 && oauth2.openid;
+            var pkg = await WechatJsSdk.getBindDevice(openid);
+            console.log ("getBindDevice", openid, pkg);
             ctx.body = pkg;
         };
     }

@@ -2,27 +2,6 @@ import React, { Component, PropTypes } from 'react'
 import classes from './List.scss'
 
 export class DeviceList extends Component {
-/*
-    componentWillMount () {
-        console.log ("componentWillMount");
-    }
-    componentWillReceiveProps (nextProps) {
-        console.log ("componentWillReceiveProps");
-    }
-    shouldComponentUpdate (nextProps, nextState) {
-        console.log ("shouldComponentUpdate");
-        return true;
-    }
-    componentWillUpdate (nextProps, nextState) {
-        console.log ("componentWillUpdate");
-    }
-    componentDidUpdate () {
-        console.log ("componentDidUpdate");
-    }
-    componentWillUnmount () {
-        console.log ("componentWillUnmount");
-    }
-*/
     componentDidMount () {
         console.log ("componentDidMount");
         this.props.fetchDevices && this.props.fetchDevices (0, 10);
@@ -31,26 +10,28 @@ export class DeviceList extends Component {
     render () {
         var props = this.props;
         console.log ("Iot/Device/component/List", this.props);
+
+        var { devices } = this.props;
+        var devicelist = devices && devices.device_list;
+        
+
         return (
 <div>
   <div>
-    <h2 className={classes.zenHeader}>
-      {props.zen ? props.zen.value : ''}
-    </h2>
-    <button className='btn btn-default' onClick={props.fetchZen}>
-        { 'Fetch a wisdom: ' } { props.signpkg?JSON.stringify(props.signpkg):'' }
+    <button className='btn btn-default' onClick={props.fetchDevices.bind(undefined, 0, 10)}>
+        { 'Fetch Devices: ' } { devicelist && (devicelist.length+'') }
     </button>
     {' '}
     <button className='btn btn-default' onClick={props.saveCurrentZen}>
         Save
     </button>
   </div>
-  {props.saved.length
+  {devicelist && devicelist.length
    ? <div className={classes.savedWisdoms}>
-       <h3>Saved wisdoms</h3>
+       <h3>Device List</h3>
        <ul>
-         {props.saved.map(zen=>
-           <li key={zen.id}> {zen.value} </li>
+         {devicelist.map(device=>
+           <li key={device.device_id}> {device.device_type} - {device.device_id} </li>
          )}
        </ul>
      </div>

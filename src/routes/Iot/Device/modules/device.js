@@ -1,4 +1,4 @@
-import { URL_API_DEVICE_GETDEVICELIST } from './apiurl'
+import { URL_API_DEVICE_GETBINDDEVICE } from './apiurl'
 
 export const DEVICES_REQUEST = 'DEVICES_REQUEST'
 export const DEVICES_SUCCESS = 'DEVICES_SUCCESS'
@@ -28,15 +28,21 @@ export const fetchDevices = (start, count) => {
     return (dispatch) => {
         dispatch(devicesRequest())
         
-        var myHeaders = new Headers();
-        myHeaders.append("Content-Type", "application/json; charset=utf-8");
-        
-        return fetch(URL_API_DEVICE_GETDEVICELIST , 
-                     { method: 'POST',
-                       headers: myHeaders,
+        /*return fetch(URL_API_DEVICE_GETBINDDEVICE, 
+                     { method: 'GET',
+                       headers: { 
+                           "Content-Type": "application/json; charset=utf-8" },
                        mode: 'cors',
                        cache: 'default',
                        body: JSON.stringify({page:0, start:start, count:count}) })
+            .then(data => data.json())
+            .then(text => dispatch(devicesSuccess(text)))
+            .catch((error) => {
+                console.log('fetch error: ' + error.message);
+                dispatch(devicesFailure(error))
+            });*/
+
+        return fetch(URL_API_DEVICE_GETBINDDEVICE)
             .then(data => data.json())
             .then(text => dispatch(devicesSuccess(text)))
             .catch((error) => {
@@ -55,7 +61,7 @@ export const actions = {
 
 const DEVICE_ACTION_HANDLERS = {
     [DEVICES_REQUEST]: (state) => { return ({ ...state, fetching:true, error:null })},
-    [DEVICES_SUCCESS]: (state, action) => { return ({ ...state, devices: state.devices.concat(action.payload), fetching:false, error:null })},
+    [DEVICES_SUCCESS]: (state, action) => { return ({ ...state, devices: action.payload, fetching:false, error:null })},
     [DEVICES_FAILURE]: (state, action) => { return ({ ...state, fetching:false, error:action.error}) }
 }
 
