@@ -20,14 +20,16 @@ const debug = _debug('app:bin:server')
 const port = config.server_port
 const host = config.server_host
 
-const crypto = require('crypto'),
-fs = require("fs"),
-http = require("http");
-
-var privateKey = fs.readFileSync('privatekey.pem').toString();
-var certificate = fs.readFileSync('certificate.pem').toString();
-var credentials = crypto.createCredentials({key: privateKey, cert: certificate});
-
+//const crypto = require('crypto'),
+const fs = require("fs"),
+http = require("http"),
+https = require('https');
+  
 http.createServer(server.callback()).listen(3000);
-http.createServer(server.callback()).setSecure(credentials).listen(443);
+https.createServer( { key: fs.readFileSync('mqtt.lancertech.net.key'), 
+                      cert: fs.readFileSync('mqtt.lancertech.net_cert.crt') 
+                    }, 
+                    server.callback()
+                  ).listen(3001);
+
 
