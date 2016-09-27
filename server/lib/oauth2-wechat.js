@@ -34,8 +34,8 @@ export default class  Oauth2Api {
     getState (appid) {
         return function (ctx, next) {
             var scope = ctx.request.query.scope || ctx.request.body.scope;
-            var session = ctx.session;
-            console.log ("windsome getState1 ", scope, "session", session);
+            //var session = ctx.session;
+            //console.log ("windsome getState1 ", scope, "session", session);
             // start a new oauth2 flow.
             var state =  Math.random().toString(36).substr(2, 6);
             var oauth2 = {
@@ -43,8 +43,8 @@ export default class  Oauth2Api {
                 state: state,
                 scope: scope,
             };
-            session.oauth2 = oauth2;
-            console.log ("windsome getState2 ", session);
+            ctx.session.oauth2 = oauth2;
+            console.log ("windsome getState2 ", oauth2);
             ctx.body = oauth2;
         }
     }
@@ -53,11 +53,11 @@ export default class  Oauth2Api {
         return async function(ctx, next) {
             var code = ctx.request.query.code;
             var state = ctx.request.query.state;
-            var session = ctx.session;
-            var oauth2 = session.oauth2;
-            debug ("windsome", code, state, "session", session);
+            //var session = ctx.session;
+            var oauth2 = ctx.session.oauth2;
+            debug ("windsome", code, state, "oauth2", oauth2);
             
-            if (state == oauth2.state) {
+            if (state && oauth2 && (state == oauth2.state)) {
                 // after handshake from wechat, already login!
                 var oauth2_next = { ...oauth2, code: code };
             }
@@ -75,12 +75,12 @@ export default class  Oauth2Api {
         return async function (ctx, next){
             var code = ctx.request.query.code || ctx.request.body.code;
             var state = ctx.request.query.state || ctx.request.body.state;
-            var session = ctx.session;
-            var oauth2 = session.oauth2;
-            debug ("windsome getUserInfo1", code, state, "session", session);
+            //var session = ctx.session;
+            var oauth2 = ctx.session.oauth2;
+            debug ("windsome getUserInfo1", code, state, "oauth2", oauth2);
             var ret;
             // check whether state is in cache?
-            if (state === oauth2.state) {
+            if (state && oauth2 && (state == oauth2.state)) {
                 // after handshake from wechat, already login!
                 // TODO: check whether state's ip is same as that in the cache?
                 // get oauth2 access_token from weixin
@@ -90,7 +90,7 @@ export default class  Oauth2Api {
                 
                 // get user info from weixin using access_token.
                 console.log ("windsome getUserInfo2", token);
-                session.oauth2 = oauth2_next;
+                ctx.session.oauth2 = oauth2_next;
                 ret = oauth2_next;
             } else {
                 console.log ("not found state in cache! a illege request!");
