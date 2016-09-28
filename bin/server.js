@@ -26,10 +26,10 @@ http = require("http"),
 https = require('https');
   
 http.createServer(server.callback()).listen(3000);
-https.createServer( { key: fs.readFileSync('mqtt.lancertech.net.key'), 
-                      cert: fs.readFileSync('mqtt.lancertech.net_cert.crt') 
+https.createServer( { key: fs.readFileSync('2_mp.lancertech.net.key'), 
+                      cert: fs.readFileSync('1_mp.lancertech.net_cert.crt') 
                     }, 
                     server.callback()
-                  ).listen(3001);
+                  ).listen(443);
 
 
