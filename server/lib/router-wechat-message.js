@@ -60,7 +60,7 @@ function* processMessage() {
 export default function WechatMessage (opts) {
     opts = opts || {};
     var router = require('koa-router')(opts.router);
-    router.use(convert (wechat(opts.token).middleware(processMessage)));
+    router.all('/', convert (wechat(opts.token).middleware(processMessage)));
     //router.all('/', convert (wechat('Q0hctpus1eH5xdvrXBuTYzS23OewxhgO').middleware(processMessage)));
     return router;
 }
