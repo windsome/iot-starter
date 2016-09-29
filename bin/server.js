@@ -30,6 +30,6 @@ https.createServer( { key: fs.readFileSync('2_mp.lancertech.net.key'),
                       cert: fs.readFileSync('1_mp.lancertech.net_cert.crt') 
                     }, 
                     server.callback()
-                  ).listen(443);
+                  ).listen(3001);
 
 
