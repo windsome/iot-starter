@@ -82,7 +82,7 @@ JsSdk.prototype._getJsApiTicket = function _getJsApiTicket() {
     if (expireTime < currentTimestamp) {
         // ticket has expire.
         console.log ("ticket has expired, need refresh!");
-        var accessToken = this._getAccessToken();
+        var accessToken = this.getAccessToken();
         var url = "https://api.weixin.qq.com/cgi-bin/ticket/getticket?type=1&access_token="+accessToken;
         console.log ("getticket url="+url);
         var res = SyncRequest('GET', url);
@@ -107,7 +107,7 @@ JsSdk.prototype._getJsApiTicket = function _getJsApiTicket() {
     }
 }
 
-JsSdk.prototype._getAccessToken = function () {
+JsSdk.prototype.getAccessToken = function () {
     if (this.debug) {
         console.log ("where store data?");
     }
@@ -144,7 +144,7 @@ JsSdk.prototype._getAccessToken = function () {
                 console.log ("write file fail: " + err);
             }
         } else {
-            console.log ("_getAccessToken: request fail! url="+url);
+            console.log ("getAccessToken: request fail! url="+url);
         }
     } else {
         // use cache access_token;
@@ -170,7 +170,7 @@ JsSdk.prototype.getOauthAccessToken = async function (code) {
 JsSdk.prototype.getBindDevice = async function (openid) {
     var ret;
     try {
-        var access_token = await this._getAccessToken();
+        var access_token = await this.getAccessToken();
         var url = 'https://api.weixin.qq.com/device/get_bind_device?access_token=ACCESS_TOKEN&openid=OPENID'.replace(/ACCESS_TOKEN/g, access_token).replace(/OPENID/g, openid);
         var res = await fetch (url);
         ret = res.json();

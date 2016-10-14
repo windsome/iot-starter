@@ -15,6 +15,7 @@ import 'isomorphic-fetch';
 import Oauth2Api from './lib/oauth2-wechat';
 import WechatApi from './lib/router-apis-wechat';
 import WechatMessage from './lib/router-wechat-message';
+import MqttLock from './lib/mqtt-lock';
 
 const WechatJsSdk = new JsSdk ({appId:'wx1a6eca02cffc398c', appSecret:'e8bed04caeabe4129674a289847eb509', origin:'gh_9e62dd855eff'});
 const debug = _debug('app:server')
@@ -104,4 +105,6 @@ app.use(function (ctx, next) {
     //this.request.body = JSON.parse(rawText);
 })
 
+const mqttLock = new MqttLock({jssdk: WechatJsSdk});
+//mqttLock.subscribe("a");
 export default app
