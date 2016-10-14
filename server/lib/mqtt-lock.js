@@ -63,7 +63,7 @@ export default class MqttLock {
     constructor (opts) {
         // see https://github.com/mqttjs/MQTT.js/issues/339
         this.opts = opts;
-        var topicPrefix = '$SYS/broker/lock/';
+        var topicPrefix = '/broker/smartlock/';
         var TRUSTED_CA_LIST = fs.readFileSync(__dirname + '/ca.mqtt.lock.cer');
         var options = {
             port: 8883,
@@ -113,11 +113,10 @@ export default class MqttLock {
         }
         console.log ("message", topic, msg);
         var res = {};
-        var cmd = msg.cmd || '';
-        var deviceUuid = msg.uuid;
         var jssdk = this.opts.jssdk;
-        switch (cmd) {
+        switch (msg.cmd) {
         case 'get_access_token':
+            res.uuid = msg.uuid;
             res.access_token = jssdk.getAccessToken();
             //res.access_token = '1111';
             this.publish (msg.uuid, JSON.stringify(res));
