@@ -11,5 +11,6 @@ coverage
 
 access_token*.json
 jsapi_ticket*.json
+db.*.sqlite
 
 src/index.html

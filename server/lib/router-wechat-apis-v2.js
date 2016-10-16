@@ -14,6 +14,7 @@ const debug = _debug('app:server:apis')
 
 import Wechat from './wechat';
 import MqttLock from './mqtt-lock';
+import models from '../models';
 
 export default class WechatApi {
     constructor (opts) {
@@ -22,6 +23,7 @@ export default class WechatApi {
         var mqttOpts = this.opts.mqtt;
         mqttOpts = { ...mqttOpts, wechat: this.wechat };
         this.mqttLock = new MqttLock(mqttOpts);
+        this.initDatabase ();
 
         var router = require('koa-router')(this.opts.router);
         router.all('/getJwt', this.getJwt());
@@ -41,7 +43,21 @@ export default class WechatApi {
         router.all('/jsapi/get_sign_package', this.getSignPackage.bind(this));
         // device
         router.all('/device/get_bind_device', this.getBindDevice());
-        
+
+        // database/user
+        //router.all('/db/list_user', this.dbListUser.bind(this));
+        router.all('/db/create_user', this.dbCreateUser.bind(this));
+        //router.all('/db/destroy_user', this.dbDestroyUser.bind(this));
+        router.all('/db/update_user', this.dbUpdateUser.bind(this));
+        router.all('/db/list_user', this.dbList(models.User).bind(this));
+        router.all('/db/destroy_user', this.dbDestroyById(models.User));
+        // database/lock
+        router.all('/db/create_lock', this.dbCreate(models.Lock).bind(this));
+        router.all('/db/update_lock', this.dbUpdate(models.Lock));
+        router.all('/db/list_lock', this.dbList(models.Lock));
+        router.all('/db/destroy_lock', this.dbDestroyById(models.Lock));
+
+        // save router.
         this.router = router;
     }
 
@@ -134,10 +150,149 @@ export default class WechatApi {
             ret = oauth2_next;
         } else {
             console.log ("not found state in cache! a illege request!");
-            ret = {retcode: -2, message: "illege request!" };
+            ret = {errcode: -2, message: "illege request!" };
         }
         console.log ("windsome getUserInfo2", ret);
         ctx.body = ret;
+    }
+
+    // database.
+    initDatabase () {
+        this.database_status = false;
+        models.sequelize.sync()
+            .then(function() {
+                debug ("windsome database init ok!");
+                this.database_status = true;
+            }.bind(this))
+            .catch(function (e) {
+                debug ("windsome database init fail!", e.message);
+                this.database_status = false;
+            }.bind(this));
+    }
+    // common database method.
+    dbCreate (table) {
+        return async function (ctx) {
+            var thing = ctx.request.query.thing || ctx.request.body.thing;
+            try {
+                if (thing && (typeof thing === 'string')) thing = JSON.parse(thing);
+            } catch (e) {
+                ctx.body = {errcode: -1, errmsg: e.message};
+                return;
+            }
+            //console.log ("windsome mqtt", this.mqttLock);
+            var instance = await table.create(thing);
+            var obj = instance && instance.get({ plain: true });
+            console.log ("windsome", obj);
+            ctx.body = {...obj, errcode: 0};
+        }
+    }
+    
+    dbUpdate (table) {
+        return async function (ctx) {
+            var thing = ctx.request.query.thing || ctx.request.body.thing;
+            try {
+                if (thing && (typeof thing === 'string')) thing = JSON.parse(thing);
+            } catch (e) {
+                ctx.body = {errcode: -1, errmsg: e.message};
+                return;
+            }
+            var id = ctx.request.query.id || ctx.request.body.id || thing.id;
+
+            var instance = await table.findOne({ where: { id: id } });
+
+            if (instance) {
+                await instance.update(thing);
+                var obj = instance && instance.get({ plain: true });
+                console.log ("windsome", obj);
+                ctx.body = {...obj, errcode: 0};
+            } else {
+                ctx.body = {errcode: -1, errmsg: 'no such record!'};
+            }
+        }
+    }
+
+    dbList (table) {
+        return async function (ctx) {
+            var offset = ctx.request.query.offset || ctx.request.body.offset || 0;
+            var count = ctx.request.query.count || ctx.request.body.count || 10;
+            var instances = await table.findAll({
+                offset: offset,
+                limit: count
+            });
+            //console.log ("windsome", locks);
+            var objs = instances.map((instance)=>{return instance.get({ plain:true })});
+            ctx.body = {errcode: 0, data: objs};
+        }
+    }
+
+    dbDestroyById (table) {
+        return async function (ctx) {
+            var id = ctx.request.query.id || ctx.request.body.id;
+            var count = await table.destroy({
+                where: {
+                    id: id
+                }
+            });
+            console.log ("windsome", count);
+            ctx.body = {errcode: 0, count: count};
+        }
+    }
+
+    // database/user
+    async dbListUser (ctx) {
+        var offset = ctx.request.query.offset || ctx.request.body.offset || 0;
+        var count = ctx.request.query.count || ctx.request.body.count || 10;
+        var users = await models.User.findAll({
+            offset: offset,
+            limit: count,
+            include: [ models.Lock ]
+        });
+        //console.log ("windsome", users);
+        var objs = users.map((user)=>{return user.get({ plain:true })});
+        ctx.body = {errcode: 0, users: objs};
+    }
+
+    async dbCreateUser (ctx) {
+        var openid = ctx.request.query.openid || ctx.request.body.openid;
+        var info = ctx.request.query.info || ctx.request.body.info;
+        var instance = await models.User.create({
+            openid: openid,
+            info: info
+        });
+        var obj = instance && instance.get({ plain: true });
+        console.log ("windsome", obj);
+        ctx.body = {...obj, errcode: 0};
+    }
+
+    async dbUpdateUser (ctx) {
+        var id = ctx.request.query.id || ctx.request.body.id;
+
+        var instance = await models.User.findOne({ where: { id: id } });
+
+        if (instance) {
+            var openid = ctx.request.query.openid || ctx.request.body.openid;
+            var info = ctx.request.query.info || ctx.request.body.info;
+            var toUpdate = {};
+            if (!!openid) toUpdate.openid = openid;
+            if (!!info) toUpdate.info = info;
+            await instance.update(toUpdate);
+            var obj = instance && instance.get({ plain: true });
+            console.log ("windsome", obj);
+            ctx.body = {...obj, errcode: 0};
+        } else {
+            ctx.body = {errcode: -1, errmsg: 'no such record!'};
+        }
+    }
+
+    async dbDestroyUser (ctx) {
+        var id = ctx.request.query.id || ctx.request.body.id;
+        var count = await models.User.destroy({
+            where: {
+                id: id
+            }
+        });
+        console.log ("windsome", count);
+        ctx.body = {errcode: 0, count: count};
     }
     
 }
