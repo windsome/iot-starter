@@ -9,16 +9,13 @@ import _debug from 'debug'
 import config from '../config'
 import webpackDevMiddleware from './middleware/webpack-dev'
 import webpackHMRMiddleware from './middleware/webpack-hmr'
-import JsSdk from './lib/wechat/JsSdk'
 import 'isomorphic-fetch';
 
-import Oauth2Api from './lib/oauth2-wechat';
-import WechatApi from './lib/router-apis-wechat';
 import WechatMessage from './lib/router-wechat-message';
-import MqttLock from './lib/mqtt-lock';
+import WechatApi2 from './lib/router-wechat-apis-v2';
 
-const WechatJsSdk = new JsSdk ({appId:'wx1a6eca02cffc398c', appSecret:'e8bed04caeabe4129674a289847eb509', origin:'gh_9e62dd855eff'});
 const debug = _debug('app:server')
+
 const paths = config.utils_paths
 const app = new Koa()
 
@@ -49,11 +46,8 @@ app.use(convert(bodyParser()));
 var routerWechatMessage = WechatMessage({ router:{prefix: '/wechat'}, token:'Q0hctpus1eH5xdvrXBuTYzS23OewxhgO' });
 app.use(routerWechatMessage.routes()).use(routerWechatMessage.allowedMethods());
 
-var routerOauth2 = new Oauth2Api ({ jssdk: WechatJsSdk, router:{prefix: '/apis'} });
-app.use(routerOauth2.router.routes()).use(routerOauth2.router.allowedMethods());
-
-var routerApi2 = new WechatApi({ router:{prefix: '/apis'}, jwt: {secret: 'mysecret', expiresIn:3600 }, jssdk:WechatJsSdk });
-app.use(routerApi2.router.routes()).use(routerApi2.router.allowedMethods());
+var wechat2 = new WechatApi2({ wechat: {appId:'wx1a6eca02cffc398c', appSecret:'e8bed04caeabe4129674a289847eb509', origin:'gh_9e62dd855eff'}, router: {prefix: '/apis'}, jwt: {secret: 'mysecret', expiresIn:3600 } });
+app.use(wechat2.router.routes()).use(wechat2.router.allowedMethods());
 
 // Enable koa-proxy if it has been enabled in the config.
 if (config.proxy && config.proxy.enabled) {
@@ -105,6 +99,4 @@ app.use(function (ctx, next) {
     //this.request.body = JSON.parse(rawText);
 })
 
-const mqttLock = new MqttLock({jssdk: WechatJsSdk});
-//mqttLock.subscribe("a");
 export default app

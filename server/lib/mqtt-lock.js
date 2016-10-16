@@ -63,6 +63,7 @@ export default class MqttLock {
     constructor (opts) {
         // see https://github.com/mqttjs/MQTT.js/issues/339
         this.opts = opts;
+        this.count = 0;
         var topicPrefix = '/broker/smartlock/';
         var TRUSTED_CA_LIST = fs.readFileSync(__dirname + '/ca.mqtt.lock.cer');
         var options = {
@@ -89,8 +90,11 @@ export default class MqttLock {
             // message is Buffer
             //var msg = message.toString();
             //console.log("message", topic, msg)
-            that.process (topic, message);
-        })
+            this.count++;
+            console.log (this.count, " before process ");
+            that.process (topic, message, this.count);
+            console.log (this.count, " after  process ");
+        }.bind(this))
         //client.on('message', this.process);
         
         this.topicPrefix = topicPrefix;
@@ -99,12 +103,14 @@ export default class MqttLock {
 
     publish (target, msg) {
         var topic = this.topicPrefix + target;
+        console.log ("publish", topic, msg);
         this.client.publish(topic, msg);
     }
 
-    process (topic, message) {
+    async process (topic, message, index) {
         //console.log ("message", topic, message.toString());
         // message is Buffer
+        console.log (this.count, "-", index, " enter process");
         var msg = {}; 
         try {
             msg = JSON.parse(message.toString());
@@ -113,17 +119,25 @@ export default class MqttLock {
         }
         console.log ("message", topic, msg);
         var res = {};
-        var jssdk = this.opts.jssdk;
+        var wechat = this.opts.wechat;
         switch (msg.cmd) {
         case 'get_access_token':
             res.uuid = msg.uuid;
-            res.access_token = jssdk.getAccessToken();
-            //res.access_token = '1111';
+            res.access_token = await wechat.base.getAccessToken();
+            await this.sleep(4000);
             this.publish (msg.uuid, JSON.stringify(res));
             break;
         default:
             console.log ("windsome: unsupport cmd");
             break;
         }
+        console.log (this.count, "-", index, " leave process");
+    }
+    async sleep(timeout) {
+        return new Promise((resolve, reject) => {
+            setTimeout(function() {
+                resolve();
+            }, timeout);
+        });
     }
 }

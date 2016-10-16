@@ -44,7 +44,7 @@ export const fetchSign = (url) => {
 
         //var myHeaders = new Headers();
         //myHeaders.append("Content-Type", "application/json");
-        return fetch('/apis/getSignPackage', { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({ url:url }) })
+        return fetch('/apis/jsapi/get_sign_package', { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({ url:url }) })
             .then(data => data.json())
             .then(text => dispatch(recieveSign(text)))
             .catch((error) => {

@@ -32,7 +32,7 @@ export const handleOauth2 = (scope) => {
     return (dispatch) => {
         dispatch(oauth2Request())
         
-        return fetch("/apis/getState", 
+        return fetch("/apis/oauth2/get_state", 
                      { method: 'POST',
                        headers: { 
                            "Content-Type": "application/json; charset=utf-8"
@@ -80,7 +80,7 @@ export const fetchUser = (cfg) => {
     return (dispatch) => {
         dispatch(userRequest())
         
-        return fetch("/apis/getUserInfo", 
+        return fetch("/apis/jsapi/get_user_info", 
                      { method: 'POST',
                        headers: { 
                            "Content-Type": "application/json; charset=utf-8"
