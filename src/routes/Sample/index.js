@@ -24,7 +24,7 @@ import Home from './Home'
 import CounterRoute from './Counter'
 import ZenRoute from './Zen'
 import { injectReducer } from '../../store/reducers';
-import signReducer, { fetchSign } from './modules/signPackage';
+import signReducer, { fetchSign } from '../../store/lib/signPackage';
 
 export const createRoutes = (store) => ({
   path: 'sample',

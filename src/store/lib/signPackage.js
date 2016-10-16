@@ -99,26 +99,6 @@ function wxConfig (dispatch, pkg) {
         });
     console.log ("after wxConfig");
 }
-/*
-export const fetchSign = (url) => {
-    return (dispatch) => {
-        dispatch(requestSign(url))
-
-        var myHeaders = new Headers();
-        myHeaders.append("Content-Type", "application/json");
-        return fetch('/apis/getSignPackage', { method: "POST", headers: myHeaders, body: JSON.stringify({ url:url }) })
-            .then(data => data.json())
-            .then((pkg) => {
-                dispatch(recieveSign(pkg));
-                wxConfig (dispatch,pkg);
-            })
-            .catch((error) => {
-                console.log('fetch error: ' + error.message);
-                dispatch(recieveSign({}))
-            });
-    }
-}
-*/
 export const fetchSign = (url) => {
     return (dispatch) => {
         dispatch(requestSign(url))
