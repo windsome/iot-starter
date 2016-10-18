@@ -56,3 +56,13 @@ ln -s ../init.d/node-forever K23node
 公司网站需要使用bootstrap.css，而公众号页面需要weui.css，我们不能将其写在index.html中，需要动态加载
 http://www.javascriptkit.com/javatutors/loadjavascriptcss.shtml
 http://www.javascriptkit.com/javatutors/loadjavascriptcss2.shtml
+
+# 使用redux-form时，使用initialValues作为初始值，但初始值在redux-form组件中改变后并不更新？
+原因是创建redux-form时需要增加enableReinitialize:true选项
+```
+export default reduxForm({
+    form: 'lock',  // a unique identifier for this form
+    enableReinitialize: true // if you change initialValues, you need do it to take effect.
+})(EditLockForm)
+```
+*重要问题，我始终没弄明白redux-form例子“Initialize From State”并没有设置该属性却表现正常能够动态改变初始值，为什么它可以？

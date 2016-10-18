@@ -1,6 +1,6 @@
 import { connect } from 'react-redux'
-import { fetchZen, saveCurrentZen } from '../modules/zen'
-import { fetchDevices } from '../modules/device'
+import { fetchZen, saveCurrentZen } from '../../modules/zen'
+import { fetchDevices } from '../../modules/device'
 
 import { DeviceList } from '../components/List'
 

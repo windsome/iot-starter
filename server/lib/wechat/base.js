@@ -88,9 +88,9 @@ export default class WechatBase {
     
     async post (url, data) {
         var opts = {
-            dataType: 'json',
+            //dataType: 'json',
             method: 'POST',
-            data: JSON.stringify(data),
+            body: JSON.stringify(data),
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'

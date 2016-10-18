@@ -1,5 +1,5 @@
 //import 'whatwg-fetch';
-
+const _debug = false;
 export const REQUEST_SIGN = 'REQUEST_SIGN'
 export const RECIEVE_SIGN = 'RECIEVE_SIGN'
 export const WX_CONFIG_OK = 'WX_CONFIG_OK'
@@ -37,7 +37,7 @@ export function wxConfigFail (err) {
 }
 
 function wxConfig (dispatch, pkg) {
-    console.log ("wxConfig:", wx);
+    if (_debug) console.log ("wxConfig:", wx);
         wx.config({
             beta:true,
             debug: true,
@@ -86,7 +86,7 @@ function wxConfig (dispatch, pkg) {
                 'configWXDeviceWiFi'
             ]
         });
-    console.log ("after config.");
+    if (_debug) console.log ("after config.");
         // jssdk注册成功后执行
         wx.ready(function () {
             console.log ("request jssdk ok");
@@ -97,7 +97,7 @@ function wxConfig (dispatch, pkg) {
             console.log ("request jssdk fail");
             dispatch(wxConfigFail(err))
         });
-    console.log ("after wxConfig");
+    if (_debug) console.log ("after wxConfig");
 }
 export const fetchSign = (url) => {
     return (dispatch) => {

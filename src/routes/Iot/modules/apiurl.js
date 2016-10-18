@@ -17,3 +17,6 @@ export const URL_API_DEVICE_FW_UPLOAD= URL_BASE_API+'/firmwareUpload'
 export const URL_API_DEVICE_FW_DELETE= URL_BASE_API+'/firmwareDelete'
 export const URL_API_DEVICE_FW_LIST= URL_BASE_API+'/firmwareList'
 export const URL_API_DEVICE_CMD_UPDATE= URL_BASE_API+'/updateCmd'
+
+export const URL_API_USER_LIST= '/apis/db/list_user';
+export const URL_API_LOCK_LIST= '/apis/db/list_lock';

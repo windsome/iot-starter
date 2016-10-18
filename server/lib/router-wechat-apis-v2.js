@@ -43,6 +43,14 @@ export default class WechatApi {
         router.all('/jsapi/get_sign_package', this.getSignPackage.bind(this));
         // device
         router.all('/device/get_bind_device', this.getBindDevice());
+        
+        // lock associate.
+        router.all('/lock/reset_lock', this.getBindDevice());
+        router.all('/lock/pass_scene_id', this.getBindDevice());
+        router.all('/lock/set_lock_owner', this.getBindDevice());
+        router.all('/lock/add_lock_user', this.getBindDevice());
+        router.all('/lock/del_lock_user', this.getBindDevice());
+        
 
         // database/user
         //router.all('/db/list_user', this.dbListUser.bind(this));
@@ -215,7 +223,16 @@ export default class WechatApi {
         return async function (ctx) {
             var offset = ctx.request.query.offset || ctx.request.body.offset || 0;
             var count = ctx.request.query.count || ctx.request.body.count || 10;
+            var where = ctx.request.query.where || ctx.request.body.where;
+            try {
+                if (where && (typeof where === 'string')) where = JSON.parse(where);
+            } catch (e) {
+                ctx.body = {errcode: -1, errmsg: e.message};
+                return;
+            }
+            console.log ("windsome", where, ctx.request.body);
             var instances = await table.findAll({
+                where: where,
                 offset: offset,
                 limit: count
             });

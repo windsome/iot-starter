@@ -24,8 +24,8 @@ export default (store) => ({
             getComponent(nextState, cb) {
                 require.ensure([], (require) => {
                     const DeviceList = require('./containers/ListContainer').default
-                    const zenReducer = require('./modules/zen').default
-                    const deviceReducer = require('./modules/device').default;
+                    const zenReducer = require('../modules/zen').default
+                    const deviceReducer = require('../modules/device').default;
                     
                     injectReducer(store, { key:'zen', reducer:zenReducer })
                     injectReducer(store, { key:'device', reducer:deviceReducer })

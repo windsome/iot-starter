@@ -17,8 +17,8 @@ export const Header = () => (
       Device
     </Link>
     {' · '}
-    <Link to='/iot/device/list' activeClassName={classes.activeRoute}>
-      List
+    <Link to='/iot/admin' activeClassName={classes.activeRoute}>
+      Admin
     </Link>
     {' · '}
     <Link to='/iot/device/scan' activeClassName={classes.activeRoute}>

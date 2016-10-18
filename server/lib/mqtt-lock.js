@@ -113,9 +113,11 @@ export default class MqttLock {
         console.log (this.count, "-", index, " enter process");
         var msg = {}; 
         try {
-            msg = JSON.parse(message.toString());
+            var msgstr = message.toString();
+            //console.log ("windsome", msgstr, message);
+            msg = JSON.parse(msgstr);
         } catch (e) {
-            console.log ("windsome", message.toString(), e);
+            console.log ("windsome error", message.toString(), e);
         }
         console.log ("message", topic, msg);
         var res = {};
