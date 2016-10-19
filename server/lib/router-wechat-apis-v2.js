@@ -6,6 +6,7 @@ import mqtt from 'mqtt'
 import KoaJwt from 'koa-jwt'
 import Wechat from './wechat';
 import models from '../models';
+import { dbCreate, dbUpdate, dbList, dbDestroy, dbDestroyById } from './dbBase'
 
 export default class WechatApi {
     constructor (opts) {
@@ -35,10 +36,10 @@ export default class WechatApi {
         const { url, prefix, ...restMqttOpts } = config.mqtt;
         this.mqttTopicPrefix = prefix;
         var client  = mqtt.connect(url, restMqttOpts);
+        this.mqttClient = client;
         client.on('connect', function () {
             console.log ('connected '+url+' ok!');
             this.mqttConnected = true;
-            this.mqttClient = client;
             var serverTopic = this.mqttTopicPrefix+'server';
             console.log ("subscribe to " + serverTopic);
             client.subscribe (serverTopic);
@@ -69,32 +70,27 @@ export default class WechatApi {
         // device
         router.all('/device/get_bind_device', this.getBindDevice());
         
-        // lock associate.
-        router.all('/lock/reset_lock', this.getBindDevice());
-        router.all('/lock/pass_scene_id', this.getBindDevice());
-        router.all('/lock/set_lock_owner', this.getBindDevice());
-        router.all('/lock/add_lock_user', this.getBindDevice());
-        router.all('/lock/del_lock_user', this.getBindDevice());
-        
-
         // database/user
         //router.all('/db/list_user', this.dbListUser.bind(this));
         router.all('/db/create_user', this.dbCreateUser.bind(this));
         //router.all('/db/destroy_user', this.dbDestroyUser.bind(this));
         router.all('/db/update_user', this.dbUpdateUser.bind(this));
-        router.all('/db/list_user', this.dbList(models.User).bind(this));
-        router.all('/db/destroy_user', this.dbDestroyById(models.User));
+        router.all('/db/list_user', dbList(models.User));
+        router.all('/db/destroy_user', dbDestroyById(models.User));
         // database/lock
-        router.all('/db/create_lock', this.dbCreate(models.Lock).bind(this));
-        router.all('/db/update_lock', this.dbUpdate(models.Lock));
-        router.all('/db/list_lock', this.dbList(models.Lock));
-        router.all('/db/destroy_lock', this.dbDestroyById(models.Lock));
+        router.all('/db/create_lock', dbCreate(models.Lock));
+        router.all('/db/update_lock', dbUpdate(models.Lock));
+        router.all('/db/list_lock', dbList(models.Lock));
+        router.all('/db/destroy_lock', dbDestroyById(models.Lock));
 
         // save router.
         //this.router = router;
     }
 
     async processMqttMessage (topic, message) {
+        // Process Message published by Lock or App. 
+        // ***currently, only Lock publish messages.
+        // Lock ---publish---> Service
         console.log("message", topic, message.toString())
         var msg = {}; 
         try {
@@ -113,10 +109,48 @@ export default class WechatApi {
             //await this.sleep(4000);
             this.mqttClient.publish (msg.uuid, JSON.stringify(res));
             break;
+        case 'register':
+            // direct: LOCK->SERVICE, MQTT  
+            // input: {cmd:'register', id: 'temp-UUID', mac:'mac'}  
+            // output: {errcode:0, errmsg:'', ca1:'', ca2:'', ca3:'', id:'NEW-UUID', qrcode:''}  
+            
+            break;
+        case 'heartbeat':
+            // direct: LOCK->SERVICE, MQTT  
+            // input: {cmd:'heartbeat', id:'UUID'}  
+            // output: {errcode: 0, errmsg:'', time:timestamp}  
+            break;
+        case 'log':
+            // direct: LOCK->SERVICE, MQTT  
+            // input: {cmd:'log', id:'UUID', log:[{action:scan, time:timestamp},{action:password, time:timestamp},...]}  
+            // output: {errcode: 0, errmsg:''}  
+            break;
+        case 'qrcode':
+            // direct: LOCK->SERVICE, MQTT  
+            // input: {cmd:'qrcode', id:'UUID', scene_id:'GENERATED_SCENE_ID'}  
+            // output: {errcode: 0, errmsg:'', qrcode:'GENERATED_QRCODE', timeout:600}  
+            break;
         default:
             console.log ("windsome: unsupport cmd");
             break;
         }
+    }
+    async sendSceneIdToLock (ctx, next) {
+        // direct: APP->SERVICE  
+        // input: {id:'UUID', scene_id:'GENERATED_SCENE_ID'}  
+        // output: {errcode: 0, errmsg:''}  
+        
+    }
+    async setPassword (ctx, next) {
+        // direct: APP->SERVICE, API, /apis/lock/set_password  
+        // input: {id:'UUID', password:'MD5-PASSWORD'}  
+        // output: {errcode: 0, errmsg:''}  
+        
+    }
+    async findLock (ctx, next) {
+        // direct: APP->SERVICE  
+        // input: {where: {id:'INPUT-UUID', mac:'INPUT-MAC', qrcode:'SCAN-QRCODE', device_id:'SCAN-DEVICE_ID'}}, where中的条件只需填写一项就行  
+        // output: {errcode: 0, errmsg:'', data: {...}}  
     }
 
     getJwt () {
@@ -212,84 +246,6 @@ export default class WechatApi {
         }
         console.log ("windsome getUserInfo2", ret);
         ctx.body = ret;
-    }
-
-    // common database method.
-    dbCreate (table) {
-        return async function (ctx) {
-            var thing = ctx.request.query.thing || ctx.request.body.thing;
-            try {
-                if (thing && (typeof thing === 'string')) thing = JSON.parse(thing);
-            } catch (e) {
-                ctx.body = {errcode: -1, errmsg: e.message};
-                return;
-            }
-            //console.log ("windsome mqtt", this.mqttLock);
-            var instance = await table.create(thing);
-            var obj = instance && instance.get({ plain: true });
-            console.log ("windsome", obj);
-            ctx.body = {...obj, errcode: 0};
-        }
-    }
-    
-    dbUpdate (table) {
-        return async function (ctx) {
-            var thing = ctx.request.query.thing || ctx.request.body.thing;
-            try {
-                if (thing && (typeof thing === 'string')) thing = JSON.parse(thing);
-            } catch (e) {
-                ctx.body = {errcode: -1, errmsg: e.message};
-                return;
-            }
-            var id = ctx.request.query.id || ctx.request.body.id || thing.id;
-
-            var instance = await table.findOne({ where: { id: id } });
-
-            if (instance) {
-                await instance.update(thing);
-                var obj = instance && instance.get({ plain: true });
-                console.log ("windsome", obj);
-                ctx.body = {...obj, errcode: 0};
-            } else {
-                ctx.body = {errcode: -1, errmsg: 'no such record!'};
-            }
-        }
-    }
-
-    dbList (table) {
-        return async function (ctx) {
-            var offset = ctx.request.query.offset || ctx.request.body.offset || 0;
-            var count = ctx.request.query.count || ctx.request.body.count || 10;
-            var where = ctx.request.query.where || ctx.request.body.where;
-            try {
-                if (where && (typeof where === 'string')) where = JSON.parse(where);
-            } catch (e) {
-                ctx.body = {errcode: -1, errmsg: e.message};
-                return;
-            }
-            console.log ("windsome", where, ctx.request.body);
-            var instances = await table.findAll({
-                where: where,
-                offset: offset,
-                limit: count
-            });
-            //console.log ("windsome", locks);
-            var objs = instances.map((instance)=>{return instance.get({ plain:true })});
-            ctx.body = {errcode: 0, data: objs};
-        }
-    }
-
-    dbDestroyById (table) {
-        return async function (ctx) {
-            var id = ctx.request.query.id || ctx.request.body.id;
-            var count = await table.destroy({
-                where: {
-                    id: id
-                }
-            });
-            console.log ("windsome", count);
-            ctx.body = {errcode: 0, count: count};
-        }
     }
 
     // database/user

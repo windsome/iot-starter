@@ -3,10 +3,8 @@
 var fs        = require("fs");
 var path      = require("path");
 var Sequelize = require("sequelize");
-var env       = process.env.NODE_ENV || "development";
-//var config    = require(path.join(__dirname, '../..', 'config'));
 import config from '../../config';
-//console.log ("windsome", config);
+
 var sequelize = new Sequelize(config.db.name, null, null, {
     dialect: config.db.dialect,
     storage: config.db.storage

@@ -1,13 +1,12 @@
 "use strict";
 
 module.exports = function(sequelize, DataTypes) {
-    var Lock = sequelize.define("Lock", {
+    var LockLog = sequelize.define("LockLog", {
         id: {
             type: DataTypes.UUID,
             defaultValue: DataTypes.UUIDV4,
             primaryKey: true
         },
-        mac: DataTypes.STRING,
         info: DataTypes.TEXT
     }, {
         timestamps: false,
@@ -22,5 +21,5 @@ module.exports = function(sequelize, DataTypes) {
         }
     });
 
-    return Lock;
+    return LockLog;
 };

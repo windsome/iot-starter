@@ -80,67 +80,69 @@ mosquitto_pub -t /broker/smartlock/server --cafile ca.crt -h mqtt.lancertech.net
 主要负责门锁(LOCK)与门锁后台服务(SERVICE)的交互及其他应用子系统(APP)与门锁后台服务的交互。其他子系统与门锁的交互完全通过门锁后台中转。  
 API分为门锁向门锁服务的mqtt请求部分、门锁服务供其他应用子系统调用的接口、门锁服务调用应用子系统的接口描述（其他系统需要实现这些接口）  
 注意：因为mqtt相关操作可能会有延时及不确定性（比如：锁收到消息后，可能突然断电，导致服务端未收到成功消息，此时需要服务器重发），为避免重复，需要对每一个操作指定一个事物号，用来唯一确定一个动作，事物号使用UUID。  
-1, 锁出厂前初始化获取基础信息命令register，上传MAC地址，获取CA证书、UUID、（是否获取微信硬件QRCODE？）  
+1, MQTT: register, 锁出厂前初始化获取基础信息命令，上传MAC地址，获取CA证书、UUID、（是否获取微信硬件QRCODE？）  
     命令过程:  
-        这条命令的执行是因为锁本身没有基础的锁信息，没有UUID。为了能使通讯进行，锁首先生成一个临时UUID，并将mqtt订阅到该UUID对应的topic(/broker/smartlock/temp-UUID)。
-        锁的生成一条register命令。
-        锁publish该命令到mqtt服务端topic（/broker/smartlock/server），如果通讯出问题或者终端在5秒内未收到反馈则一直重发。
-        服务端收到register命令后动态生成一个uuid，（如果用到微信设备，则从devices表中获取一个锁类型设备的device_id,qrcode）存放在数据库Locks表中，并将该记录包含ca信息返回给锁。服务端如果收到多条相同mac地址的register命令（如何判断相同？从数据库中找到mac地址对应的设备），将数据库中资料发送出去。
-        锁将收到的消息解析存于flash中。errcode == 0的消息是正确的返回，否则不保存并重发register消息。
-        保存消息后，锁重启，会有心跳消息发送到服务端。（在工厂测试页面，应该停在一个画面，这个画面监测register消息，收到消息后提示过程，并在界面中缓存设备的mac地址和uuid，并提示该设备发出的消息，让工厂人员能够确保锁register成功了）。  
+      这条命令的执行是因为锁本身没有基础的锁信息，没有UUID。为了能使通讯进行，锁首先生成一个临时UUID，并将mqtt订阅到该UUID对应的topic(/broker/smartlock/temp-UUID)。  
+      锁的生成一条register命令。  
+      锁publish该命令到mqtt服务端topic（/broker/smartlock/server），如果通讯出问题或者终端在5秒内未收到反馈则一直重发。  
+      服务端收到register命令后动态生成一个uuid，（如果用到微信设备，则从devices表中获取一个锁类型设备的device_id,qrcode）存放在数据库Locks表中，并将该记录包含ca信息返回给锁。服务端如果收到多条相同mac地址的register命令（如何判断相同？从数据库中找到mac地址对应的设备），将数据库中资料发送出去。  
+      锁将收到的消息解析存于flash中。errcode == 0的消息是正确的返回，否则不保存并重发register消息。  
+      保存消息后，锁重启，会有心跳消息发送到服务端。（在工厂测试页面，应该停在一个画面，这个画面监测register消息，收到消息后提示过程，并在界面中缓存设备的mac地址和uuid，并提示该设备发出的消息，让工厂人员能够确保锁register成功了）。   
     direct: LOCK->SERVICE, MQTT  
     input: {cmd:'register', id: 'temp-UUID', mac:'mac'}  
-    output: {errcode:0, errmsg:'', ca1:'', ca2:'', ca3:'', uuid:'', qrcode:''}  
-2，锁心跳命令heartbeat，定时向mqtt发送消息，校准时间，及获取mqtt服务端缓存着的命令  
+    output: {errcode:0, errmsg:'', ca1:'', ca2:'', ca3:'', id:'NEW-UUID', qrcode:''}  
+    注意：此消息在厂测模式下运行，无需使用register_ack命令进行确认，人工看界面即可。  
+2，MQTT: heartbeat, 锁心跳命令，定时向mqtt发送消息，校准时间，及获取mqtt服务端缓存着的命令  
     direct: LOCK->SERVICE, MQTT  
     input: {cmd:'heartbeat', id:'UUID'}  
     output: {errcode: 0, errmsg:'', time:timestamp}  
-3，锁日志上传命令log，锁上电的空闲时间段上传日志  
+    注意：此命令如果只是为了heartbeat，没有返回其他命令也不需进行ACK确认  
+3，MQTT: log, 锁日志上传命令，锁上电的空闲时间段上传日志  
     direct: LOCK->SERVICE, MQTT  
     input: {cmd:'log', id:'UUID', log:[{action:scan, time:timestamp},{action:password, time:timestamp},...]}  
     output: {errcode: 0, errmsg:''}  
-4.1，锁获取临时场景二维码命令qrcode  
+4.1，MQTT: qrcode, 锁获取临时场景二维码命令qrcode  
     命令过程：  
-        锁端生成一个scene_id，这是个长字符串，建议使用UUID生成方式。
-        锁将scene_id发到锁服务端的mqtt服务器
-        如果使用的是微信的场景二维码，则调用微信公众号接口生成qrcode。如果是其他方式生成二维码，则用相应方式生成。也可以在我们自己平台生成一个10分钟时效的二维码。
-        返回二维码及有效时间给锁，锁得到二维码后可以显示在屏幕上，由用户扫描。
+      锁端生成一个scene_id，这是个长字符串，建议使用UUID生成方式。  
+      锁将scene_id发到锁服务端的mqtt服务器  
+      如果使用的是微信的场景二维码，则调用微信公众号接口生成qrcode。如果是其他方式生成二维码，则用相应方式生成。也可以在我们自己平台生成一个10分钟时效的二维码。  
+      返回二维码及有效时间给锁，锁得到二维码后可以显示在屏幕上，由用户扫描。  
     direct: LOCK->SERVICE, MQTT  
     input: {cmd:'qrcode', id:'UUID', scene_id:'GENERATED_SCENE_ID'}  
     output: {errcode: 0, errmsg:'', qrcode:'GENERATED_QRCODE', timeout:600}  
-4.2，应用子系统发送scene_id给锁服务端check_scene_id，并由锁服务端发送给锁终端，在锁端对scene_id校验  
+4.2，API: /apis/lock/send_scene_id_to_lock, 用户通过公众号页面（或微信扫一扫，或其他应用子系统）扫码后，发送scene_id给锁服务端，并由锁服务端发送给锁终端，在锁端对scene_id进行匹配校验  
     命令过程：  
-        用户扫描锁上面通过qrcode命令得到的二维码（微信二维码用微信扫一扫，其他平台调用相应API，自己系统生成的二维码，则使用自己系统的扫描界面）
-        扫描后，应用子系统会得到scene_id（微信则是由微信服务器发送给第三方平台，通过XML消息方式，我们可以提取其中的scene_id）
-        应用子系统（或微信第三方平台）得到scene_id后，调用send_scene_id，将scene_id发送到锁服务端
-    direct: APP->SERVICE, API, /apis/lock/check_scene_id  
+      用户扫描锁上面通过qrcode命令得到的二维码（微信二维码用微信扫一扫，其他平台调用相应API，自己系统生成的二维码，则使用自己系统的扫描界面）  
+      扫描后，应用子系统会得到scene_id（微信则是由微信服务器发送给第三方平台，通过XML消息方式，我们可以提取其中的scene_id）  
+      应用子系统（或微信第三方平台）得到scene_id后，调用send_scene_id，将scene_id发送到锁服务端  
+    direct: APP->SERVICE->LOCK  
     input: {id:'UUID', scene_id:'GENERATED_SCENE_ID'}  
     output: {errcode: 0, errmsg:''}  
     注意：此命令的处理是异步的，我们也可以等待，但有可能导致http超时  
-4.3，锁服务端发送scene_id到锁端命令check_scene_id，锁检查scene_id是否匹配  
+4.3，MQTT: send_scene_id_to_lock, 锁服务端发送scene_id到锁端命令，锁检查scene_id是否匹配  
     命令过程：  
-        锁服务端收到4.2的命令后，通过mqtt发送给锁
+      锁服务端收到4.2的命令后，通过mqtt发送给锁  
     direct: SERVICE->LOCK, MQTT  
-    input: {cmd:'send_scene_id', id:'UUID', scene_id:'GENERATED_SCENE_ID'}  
+    input: {cmd:'send_scene_id_to_lock', id:'UUID', scene_id:'GENERATED_SCENE_ID'}  
     output: {errcode: 0, errmsg:''}  
-5.1，应用子系统生成一个6位密码或者用户输入一个6位密码，给锁服务端，并由锁服务端发送给锁终端保存，供用户使用密码开门，命令set_password  
+5.1，API: /apis/lock/set_password, 应用子系统生成一个6位密码或者用户输入一个6位密码，给锁服务端，并由锁服务端发送给锁终端保存，供用户使用密码开门  
     命令过程：  
-        用户订房，或者管理员设置开门密码等情况下，需要发送密码给锁
-    direct: APP->SERVICE, API, /apis/lock/set_password  
+      用户订房，或者管理员设置开门密码等情况下，需要发送密码给锁  
+    direct: APP->SERVICE->LOCK  
     input: {id:'UUID', password:'MD5-PASSWORD'}  
     output: {errcode: 0, errmsg:''}  
     注意：此命令的处理是异步的，我们也可以等待，但有可能导致http超时  
-5.2，锁服务端发送密码到锁端命令set_password  
+5.2，MQTT: send_scene_id, 锁服务端发送密码到锁端命令set_password  
     命令过程：  
-        锁服务端收到5.1的命令后，通过mqtt发送给锁
+      锁服务端收到5.1的命令后，通过mqtt发送给锁  
     direct: SERVICE->LOCK, MQTT  
     input: {cmd:'send_scene_id', id:'UUID', password:'MD5-PASSWORD'}  
     output: {errcode: 0, errmsg:''}  
-6，应用子系统通过UUID得到某把锁的信息get_lock，主要是判断该锁是否存在，一般用在应用子系统中用户添加锁的时候  
-    命令过程：
-        用户在APP中输入锁的UUID或MAC，（如果是微信锁，则扫描微信二维码，得到qrcode/device_id），组成查询字符串
-        锁服务端，根据条件查找锁信息，（是否将此锁置为已被使用，之后再扫描则失效并返回错误信息？）并返回。（未来是否要加强条件，如何判断该锁确实属于此用户？）
-    direct: APP->SERVICE, API, /apis/lock/get_lock
+6，API: /apis/lock/find_lock, 应用子系统通过UUID得到某把锁的信息get_lock，主要是判断该锁是否存在，一般用在应用子系统中用户添加锁的时候  
+    命令过程：  
+      用户在APP中输入锁的UUID或MAC，（如果是微信锁，则扫描微信二维码，得到qrcode/device_id），组成查询字符串  
+      锁服务端，根据条件查找锁信息，（是否将此锁置为已被使用，之后再扫描则失效并返回错误信息？）并返回。（未来是否要加强条件，如何判断该锁确实属于此用户？）  
+    direct: APP->SERVICE  
     input: {where: {id:'INPUT-UUID', mac:'INPUT-MAC', qrcode:'SCAN-QRCODE', device_id:'SCAN-DEVICE_ID'}}, where中的条件只需填写一项就行  
     output: {errcode: 0, errmsg:'', data: {...}}  
 ## 门锁超级用户管理系统
