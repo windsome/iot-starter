@@ -3,6 +3,7 @@ import path from 'path'
 import _debug from 'debug'
 import { argv } from 'yargs'
 import ip from 'ip'
+import fs from 'fs'
 
 const localip = ip.address()
 const debug = _debug('app:config')
@@ -28,6 +29,7 @@ const config = {
   // ----------------------------------
   server_host : localip, // use string 'localhost' to prevent exposure on local network
   server_port : process.env.PORT || 3000,
+  server_port_https : process.env.PORT_HTTPS || 3001,
 
   // ----------------------------------
   // Compiler Configuration
@@ -62,12 +64,32 @@ const config = {
   ],
 
   // ----------------------------------
-  // Test Configuration
+  // Database Configuration
   // ----------------------------------
   db : {
     name: "lock",
     dialect: "sqlite",
     storage: "./db.development.sqlite"
+  },
+
+  // ----------------------------------
+  // Mqtt Configuration
+  // ----------------------------------
+  mqtt : {
+    url : 'mqtts://mqtt.lancertech.net',
+    prefix: '/broker/smartlock/',
+    port: 8883,
+    host: 'mqtt.lancertech.net',
+    //The CA list will be used to determine if server is authorized
+    ca: fs.readFileSync(__dirname + '/ca.mqtt.lock.cer')
+  },
+
+  // ----------------------------------
+  // Mqtt Configuration
+  // ----------------------------------
+  https : {
+    key: fs.readFileSync(__dirname + '/2_mp.lancertech.net.key'), 
+    cert: fs.readFileSync(__dirname + '/1_mp.lancertech.net_cert.crt') 
   }
 }
 

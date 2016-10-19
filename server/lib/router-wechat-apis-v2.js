@@ -1,31 +1,56 @@
-/**
- * @file   middleware-apis.js
- * @author windsome.feng <86643838@163.com>
- * @date   Sat Sep 24 15:37:22 2016
- * 
- * @brief  should use access_token, we need user/authentication info.
- * 
- * 
- */
-import KoaJwt from 'koa-jwt'
-
+import config from '../../config';
 import _debug from 'debug'
 const debug = _debug('app:server:apis')
 
+import mqtt from 'mqtt'
+import KoaJwt from 'koa-jwt'
 import Wechat from './wechat';
-import MqttLock from './mqtt-lock';
 import models from '../models';
 
 export default class WechatApi {
     constructor (opts) {
+        // save opts.
         this.opts = opts || {};
-        this.wechat = new Wechat(this.opts.wechat);
-        var mqttOpts = this.opts.mqtt;
-        mqttOpts = { ...mqttOpts, wechat: this.wechat };
-        this.mqttLock = new MqttLock(mqttOpts);
-        this.initDatabase ();
 
+        // init router for apis.
         var router = require('koa-router')(this.opts.router);
+        this.router = router;
+
+        // init wechat middleware.
+        this.wechat = new Wechat(this.opts.wechat);
+
+        // init database.
+        this.database_status = false;
+        models.sequelize.sync()
+            .then(function() {
+                debug ("windsome database init ok!");
+                this.database_status = true;
+            }.bind(this))
+            .catch(function (e) {
+                debug ("windsome database init fail!", e.message);
+                this.database_status = false;
+            }.bind(this));
+
+        // init mqtt client.
+        const { url, prefix, ...restMqttOpts } = config.mqtt;
+        this.mqttTopicPrefix = prefix;
+        var client  = mqtt.connect(url, restMqttOpts);
+        client.on('connect', function () {
+            console.log ('connected '+url+' ok!');
+            this.mqttConnected = true;
+            this.mqttClient = client;
+            var serverTopic = this.mqttTopicPrefix+'server';
+            console.log ("subscribe to " + serverTopic);
+            client.subscribe (serverTopic);
+        }.bind(this));
+        //client.on('message', function (topic, message) {
+        //    console.log("message", topic, message.toString())
+        //});
+        client.on('message', this.processMqttMessage.bind(this));
+
+        
+        // routers start.........
+        // ......................
         router.all('/getJwt', this.getJwt());
         //if (this.opts.jwt) {
         //    console.log ("windsome", this.opts.jwt);
@@ -66,7 +91,32 @@ export default class WechatApi {
         router.all('/db/destroy_lock', this.dbDestroyById(models.Lock));
 
         // save router.
-        this.router = router;
+        //this.router = router;
+    }
+
+    async processMqttMessage (topic, message) {
+        console.log("message", topic, message.toString())
+        var msg = {}; 
+        try {
+            var msgstr = message.toString();
+            msg = JSON.parse(msgstr);
+        } catch (e) {
+            console.log ("parse error", message.toString(), e.message);
+        }
+
+        var res = {};
+        var wechat = this.wechat;
+        switch (msg.cmd) {
+        case 'get_access_token':
+            res.uuid = msg.uuid;
+            res.access_token = await wechat.base.getAccessToken();
+            //await this.sleep(4000);
+            this.mqttClient.publish (msg.uuid, JSON.stringify(res));
+            break;
+        default:
+            console.log ("windsome: unsupport cmd");
+            break;
+        }
     }
 
     getJwt () {
@@ -164,19 +214,6 @@ export default class WechatApi {
         ctx.body = ret;
     }
 
-    // database.
-    initDatabase () {
-        this.database_status = false;
-        models.sequelize.sync()
-            .then(function() {
-                debug ("windsome database init ok!");
-                this.database_status = true;
-            }.bind(this))
-            .catch(function (e) {
-                debug ("windsome database init fail!", e.message);
-                this.database_status = false;
-            }.bind(this));
-    }
     // common database method.
     dbCreate (table) {
         return async function (ctx) {

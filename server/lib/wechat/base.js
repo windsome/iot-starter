@@ -14,11 +14,11 @@ export default class WechatBase {
         this.appSecret = opts.appSecret;
         this.debug = opts.debug || false;
         this.getToken = opts.getToken || function(appId) {
-            var filename = 'access_token_'+appId+'.json';
+            var filename = 'temp/access_token_'+appId+'.json';
             return this._defaultReadJson(filename);
         };
         this.saveToken = opts.saveToken || function(appId, token) {
-            var filename = 'access_token_'+appId+'.json';
+            var filename = 'temp/access_token_'+appId+'.json';
             return this._defaultSaveJson(filename, token);
         }
         this.opts = opts;

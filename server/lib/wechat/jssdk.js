@@ -5,11 +5,11 @@ export default class WechatJssdk {
     constructor (base, getApiTicket, saveApiTicket) {
         this.base = base;
         this.getApiTicket = getApiTicket || function (appId) {
-            var filename = 'jsapi_ticket_'+appId+'.json';
+            var filename = 'temp/jsapi_ticket_'+appId+'.json';
             return this.base._defaultReadJson(filename);
         };
         this.saveApiTicket = saveApiTicket || function (appId, ticket) {
-            var filename = 'jsapi_ticket_'+appId+'.json';
+            var filename = 'temp/jsapi_ticket_'+appId+'.json';
             return this.base._defaultSaveJson(filename, ticket);
         };
     }
