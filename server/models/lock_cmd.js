@@ -1,26 +1,26 @@
 "use strict";
 
 module.exports = function(sequelize, DataTypes) {
-    var LockLog = sequelize.define("LockLog", {
+    var LockCmd = sequelize.define("LockCmd", {
         id: {
             type: DataTypes.UUID,
             defaultValue: DataTypes.UUIDV4,
             primaryKey: true
         },
-        lockId: DataTypes.UUID,
-        info: DataTypes.TEXT
+        cmd: DataTypes.TEXT,
+        ack: DataTypes.TEXT
     }, {
         timestamps: false,
         classMethods: {
             associate: function(models) {
-                /*LockLog.belongsTo(models.Lock, {
+                /*Lock.belongsTo(models.User, {
                     onDelete: "CASCADE",
-                    foreignKey: 'lockId'
+                    foreignKey: 'owner'
                 });
                 Lock.belongsToMany(models.User, {through: 'UserLock', timestamps: false});*/
             }
         }
     });
 
-    return LockLog;
+    return LockCmd;
 };

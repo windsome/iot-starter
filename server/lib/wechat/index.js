@@ -4,11 +4,13 @@ const debug = _debug('app:server:wechat')
 import Base from './base'
 import Jssdk from './jssdk'
 import Device from './device'
+import Qrcode from './qrcode'
 
 export default class WechatApi {
     constructor (opts) {
         this.base = new Base (opts);
         this.jssdk = new Jssdk (this.base);
         this.device = new Device (this.base);
+        this.qrcode = new Qrcode (this.base);
     }
 }

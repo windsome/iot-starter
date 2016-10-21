@@ -77,7 +77,7 @@ const config = {
   // ----------------------------------
   mqtt : {
     url : 'mqtts://mqtt.lancertech.net',
-    prefix: '/broker/smartlock/',
+    prefix: '/broker/smartlock1/',
     port: 8883,
     host: 'mqtt.lancertech.net',
     //The CA list will be used to determine if server is authorized

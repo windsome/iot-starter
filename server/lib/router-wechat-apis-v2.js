@@ -47,7 +47,7 @@ export default class WechatApi {
         //client.on('message', function (topic, message) {
         //    console.log("message", topic, message.toString())
         //});
-        client.on('message', this.processMqttMessage.bind(this));
+        client.on('message', this.processMqttMessageWrap.bind(this));
 
         
         // routers start.........
@@ -69,7 +69,13 @@ export default class WechatApi {
         router.all('/jsapi/get_sign_package', this.getSignPackage.bind(this));
         // device
         router.all('/device/get_bind_device', this.getBindDevice());
-        
+        // lock
+        router.all('/lock/send_scene_id_to_lock', this.sendSceneIdToLock.bind(this));
+        router.all('/lock/password', this.setPassword.bind(this));
+        router.all('/lock/find', this.findLock.bind(this));
+        //router.all('/lock/config', this.getBindDevice());
+        //router.all('/lock/reset', this.getBindDevice());
+
         // database/user
         //router.all('/db/list_user', this.dbListUser.bind(this));
         router.all('/db/create_user', this.dbCreateUser.bind(this));
@@ -87,6 +93,13 @@ export default class WechatApi {
         //this.router = router;
     }
 
+    async processMqttMessageWrap (topic, message) {
+        try {
+            return await this.processMqttMessage(topic, message);
+        } catch (e) {
+            console.log ("processMqttMessage fail!", e.message);
+        }
+    }
     async processMqttMessage (topic, message) {
         // Process Message published by Lock or App. 
         // ***currently, only Lock publish messages.
@@ -98,6 +111,7 @@ export default class WechatApi {
             msg = JSON.parse(msgstr);
         } catch (e) {
             console.log ("parse error", message.toString(), e.message);
+            return;
         }
 
         var res = {};
@@ -113,22 +127,59 @@ export default class WechatApi {
             // direct: LOCK->SERVICE, MQTT  
             // input: {cmd:'register', id: 'temp-UUID', mac:'mac'}  
             // output: {errcode:0, errmsg:'', ca1:'', ca2:'', ca3:'', id:'NEW-UUID', qrcode:''}  
+            var instance = await models.Lock.create ({ mac: msg.mac });
+            var obj = instance && instance.get({ plain: true });
+            if (obj) {
+                this.mqttClient.publish(this.mqttTopicPrefix + msg.id, JSON.stringify({ errcode: 0, id: obj.id }), (err) => {
+                    console.log ("publish", err);
+                });
+            } else {
+                console.log ("insert lock fail!");
+            }
             
             break;
         case 'heartbeat':
             // direct: LOCK->SERVICE, MQTT  
             // input: {cmd:'heartbeat', id:'UUID'}  
             // output: {errcode: 0, errmsg:'', time:timestamp}  
+            var timestamp = Math.round(new Date().getTime()/1000);
+            this.mqttClient.publish(this.mqttTopicPrefix + msg.id, JSON.stringify({ errcode: 0, time: timestamp }), (err) => {
+                console.log ("publish", err);
+            });
             break;
         case 'log':
             // direct: LOCK->SERVICE, MQTT  
             // input: {cmd:'log', id:'UUID', log:[{action:scan, time:timestamp},{action:password, time:timestamp},...]}  
             // output: {errcode: 0, errmsg:''}  
+            try {
+                var logs = msg.log.map ((log) => ({ lockId: msg.id, 
+                                                    info: JSON.stringify(log)
+                                                  }) );
+                var instance = await models.LockLog.bulkCreate(logs);
+                console.log ("LockLog, insert", instance.length);
+            } catch (e) {
+                console.log ("log exception", e.message);
+            }
             break;
         case 'qrcode':
             // direct: LOCK->SERVICE, MQTT  
-            // input: {cmd:'qrcode', id:'UUID', scene_id:'GENERATED_SCENE_ID'}  
-            // output: {errcode: 0, errmsg:'', qrcode:'GENERATED_QRCODE', timeout:600}  
+            // input: {cmd:'qrcode', id:'UUID', scene_id:'GENERATED_SCENE_ID', expire: TIME_IN_SECONDS}  
+            // output: {errcode: 0, errmsg:'', qrcode:'GENERATED_QRCODE', expire: TIME_IN_SECONDS}  
+            var qrcode = await this.wechat.qrcode.createTmpQRCode (msg.scene_id, msg.expire);
+            console.log ("get qrcode", qrcode);
+            this.mqttClient.publish(this.mqttTopicPrefix + msg.id, JSON.stringify(qrcode), (err) => {
+                console.log ("publish", err);
+            });
+            break;
+        case 'cmd_ack':
+            var instance = await models.LockCmd.findOne({ where: { id: msg.cmd_id } });
+            if (instance) {
+                await instance.update({ ack: message.toString() });
+                var obj = instance && instance.get({ plain: true });
+                console.log ("update LockCmd", obj);
+            } else {
+                console.log ("no such command in LockCmd", msg);
+            }
             break;
         default:
             console.log ("windsome: unsupport cmd");
@@ -136,21 +187,89 @@ export default class WechatApi {
         }
     }
     async sendSceneIdToLock (ctx, next) {
-        // direct: APP->SERVICE  
+        // direct: APP->SERVICE->LOCK  
         // input: {id:'UUID', scene_id:'GENERATED_SCENE_ID'}  
         // output: {errcode: 0, errmsg:''}  
-        
+        var id = ctx.request.query.id || ctx.request.body.id;
+        var scene_id = ctx.request.query.scene_id || ctx.request.body.scene_id;
+        var lockCmd = await this._sendCmdToMqtt (this.mqttTopicPrefix+id, { cmd: 'send_scene_id_to_lock', id: id, scene_id: scene_id });
+        ctx.body = lockCmd;
+        console.log ("sendSceneIdToLock", lockCmd);
     }
     async setPassword (ctx, next) {
-        // direct: APP->SERVICE, API, /apis/lock/set_password  
+        // direct: APP->SERVICE->LOCK
         // input: {id:'UUID', password:'MD5-PASSWORD'}  
         // output: {errcode: 0, errmsg:''}  
-        
+        var id = ctx.request.query.id || ctx.request.body.id;
+        var password = ctx.request.query.password || ctx.request.body.password;
+        var lockCmd = await this._sendCmdToMqtt (this.mqttTopicPrefix+id, { cmd: 'password', id: id, password: password });
+        ctx.body = lockCmd;
+        console.log ("setPassword", lockCmd);
     }
+    async _sendCmdToMqtt (topic, cmd, expire) {
+        // save cmd in LockCmd, and then send to mqtt.
+        var instance = await models.LockCmd.create ({ cmd: JSON.stringify(cmd) });
+        var obj = instance && instance.get({ plain: true });
+        if (obj) {
+            // insert into LockCmd table for async cmd temp storage.
+            // wait for cmd ack to remove item in LockCmd.
+            this.mqttClient.publish(topic, JSON.stringify({ cmd_id: obj.id, ...cmd }), (err) => {
+                console.log ("publish", err);
+            });
+            // return obj;
+            return await this._waitMqttResponse (obj.id, expire);
+        } else {
+            console.log ("LockCmd insert fail!");
+            return { errcode: -1, errmsg: 'insert LockCmd fail!' };
+        }
+    }
+    async _waitMqttResponse (cmd_id, expire) {
+        if (!!!expire) expire = 20;
+
+        for (var i = 0; i < expire; i++) {
+        debug ("i", i);
+            await this._sleep(1000);
+            var instance = await models.LockCmd.findOne({ where: { id: cmd_id, ack: { $ne: null } } });
+            var obj = instance && instance.get ({ plain: true });
+            if (obj) {
+                console.log ("_waitMqttResponse", obj);
+                return JSON.parse(obj.ack);
+            }
+        }
+        console.log ("timeout! cmd_id=" + cmd_id);
+        return { errcode: 1, errmsg: 'timeout', cmd_id: cmd_id };
+    }
+    async _sleep(timeout) {
+        return new Promise((resolve, reject) => {
+            setTimeout(function() {
+                resolve();
+            }, timeout);
+        });
+     }
+
     async findLock (ctx, next) {
         // direct: APP->SERVICE  
         // input: {where: {id:'INPUT-UUID', mac:'INPUT-MAC', qrcode:'SCAN-QRCODE', device_id:'SCAN-DEVICE_ID'}}, where中的条件只需填写一项就行  
         // output: {errcode: 0, errmsg:'', data: {...}}  
+        var where = ctx.request.query.where || ctx.request.body.where;
+        try {
+            if (where && (typeof where === 'string')) where = JSON.parse(where);
+        } catch (e) {
+            console.log ("parse fail", where, e.message);
+            ctx.body = {errcode: -1, errmsg: e.message};
+            return;
+        }
+
+        var instance = await models.Lock.findOne({ where: where });
+        if (instance) {
+            var obj = instance && instance.get({ plain: true });
+            if (obj) {
+                console.log ("windsome", obj);
+                ctx.body = { errcode: 0, ...obj };
+                return;
+            }
+        }
+        ctx.body = {errcode: -1, errmsg: 'no such record!'};
     }
 
     getJwt () {
