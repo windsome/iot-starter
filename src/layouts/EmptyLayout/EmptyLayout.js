@@ -1,7 +1,8 @@
 import React from 'react'
+import classes from './EmptyLayout.scss'
 
 export const EmptyLayout = ({ children }) => (
-  <div>
+  <div className={classes.emptyContainer}>
     {children}
   </div>
 )

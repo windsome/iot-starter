@@ -127,6 +127,8 @@
     "react-router-redux": "^4.0.0",
     "react-slick": "^0.13.3",
     "redux": "^3.0.0",
+    "redux-actions": "^0.12.0",
+    "redux-diff-logger": "0.0.9",
     "redux-form": "^6.1.1",
     "redux-thunk": "^2.0.0",
     "rimraf": "^2.5.1",

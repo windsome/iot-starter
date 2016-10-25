@@ -13,9 +13,9 @@ cd
 vim .bashrc  
 + source ~/.nvm/nvm.sh
 ```
-可以使用nvm list 查看本地当前安装的node版本  
-使用nvm ls-remote 查看可以安装的版本  
-使用nvm install 5.11.1安装指定版本号版本  
++ 可以使用nvm list 查看本地当前安装的node版本  
++ 使用nvm ls-remote 查看可以安装的版本  
++ 使用nvm install 5.11.1安装指定版本号版本  
 ## 使用淘宝镜像作为npm镜像
 ```
 npm install -g cnpm --registry=https://registry.npm.taobao.org
@@ -54,46 +54,36 @@ ln -s ../init.d/node-forever K23node
 
 # 动态加载css/js到页面
 公司网站需要使用bootstrap.css，而公众号页面需要weui.css，我们不能将其写在index.html中，需要动态加载  
-http://www.javascriptkit.com/javatutors/loadjavascriptcss.shtml  
-http://www.javascriptkit.com/javatutors/loadjavascriptcss2.shtml  
+[dynamic load javascript/css 1](http://www.javascriptkit.com/javatutors/loadjavascriptcss.shtml)  
+[dynamic load javascript/css 2](http://www.javascriptkit.com/javatutors/loadjavascriptcss2.shtml)    
  
-# 使用redux-form时，使用initialValues作为初始值，但初始值在redux-form组件中改变后并不更新？
-原因是创建redux-form时需要增加enableReinitialize:true选项  
-```
-export default reduxForm({
-    form: 'lock',  // a unique identifier for this form
-    enableReinitialize: true // if you change initialValues, you need do it to take effect.
-})(EditLockForm)
-```
-*重要问题，我始终没弄明白redux-form例子“Initialize From State”并没有设置该属性却表现正常能够动态改变初始值，为什么它可以？
-
 # API列表
 ## 门锁后台服务相关 service-lock
-主要负责门锁(LOCK)与门锁后台服务(SERVICE)的交互及其他应用子系统(APP)与门锁后台服务的交互。其他子系统与门锁的交互完全通过门锁后台中转。  
-API分为门锁向门锁服务的mqtt请求部分、门锁服务供其他应用子系统调用的接口、门锁服务调用应用子系统的接口描述（其他系统需要实现这些接口）  
+```
+主要负责门锁(LOCK)与门锁后台服务(SERVICE)的交互及其他应用子系统(APP)与门锁后台服务的交互。其他子系统与门锁的交互完全通过门锁后台中转。API分为门锁向门锁服务的mqtt请求部分、门锁服务供其他应用子系统调用的接口、门锁服务调用应用子系统的接口描述（其他系统需要实现这些接口）
 注意：因为mqtt相关操作可能会有延时及不确定性（比如：锁收到消息后，可能突然断电，导致服务端未收到成功消息，此时需要服务器重发），为避免重复，需要对每一个操作指定一个事物号，用来唯一确定一个动作，事物号使用UUID。  
-1, MQTT: register, 锁出厂前初始化获取基础信息命令，上传MAC地址，获取CA证书、UUID、（是否获取微信硬件QRCODE？）  
+✔1, MQTT: register, 锁出厂前初始化获取基础信息命令，上传MAC地址，获取CA证书、UUID、（是否获取微信硬件QRCODE？）
     命令过程:  
-      这条命令的执行是因为锁本身没有基础的锁信息，没有UUID。为了能使通讯进行，锁首先生成一个临时UUID，并将mqtt订阅到该UUID对应的topic(/broker/smartlock/temp-UUID)。  
-      锁的生成一条register命令。  
-      锁publish该命令到mqtt服务端topic（/broker/smartlock/server），如果通讯出问题或者终端在5秒内未收到反馈则一直重发。  
-      服务端收到register命令后动态生成一个uuid，（如果用到微信设备，则从devices表中获取一个锁类型设备的device_id,qrcode）存放在数据库Locks表中，并将该记录包含ca信息返回给锁。服务端如果收到多条相同mac地址的register命令（如何判断相同？从数据库中找到mac地址对应的设备），将数据库中资料发送出去。  
-      锁将收到的消息解析存于flash中。errcode == 0的消息是正确的返回，否则不保存并重发register消息。  
-      保存消息后，锁重启，会有心跳消息发送到服务端。（在工厂测试页面，应该停在一个画面，这个画面监测register消息，收到消息后提示过程，并在界面中缓存设备的mac地址和uuid，并提示该设备发出的消息，让工厂人员能够确保锁register成功了）。   
+        这条命令的执行是因为锁本身没有基础的锁信息，没有UUID。为了能使通讯进行，锁首先生成一个临时UUID，并将mqtt订阅到该UUID对应的topic(/broker/smartlock/temp-UUID)。
+        锁的生成一条register命令。
+        锁publish该命令到mqtt服务端topic（/broker/smartlock/server），如果通讯出问题或者终端在5秒内未收到反馈则一直重发。
+        服务端收到register命令后动态生成一个uuid，（如果用到微信设备，则从devices表中获取一个锁类型设备的device_id,qrcode）存放在数据库Locks表中，并将该记录包含ca信息返回给锁。服务端如果收到多条相同mac地址的register命令（如何判断相同？从数据库中找到mac地址对应的设备），将数据库中资料发送出去。
+        锁将收到的消息解析存于flash中。errcode == 0的消息是正确的返回，否则不保存并重发register消息。
+        保存消息后，锁重启，会有心跳消息发送到服务端。（在工厂测试页面，应该停在一个画面，这个画面监测register消息，收到消息后提示过程，并在界面中缓存设备的mac地址和uuid，并提示该设备发出的消息，让工厂人员能够确保锁register成功了）。 
     direct: LOCK->SERVICE, MQTT  
     input: {cmd:'register', id: 'temp-UUID', mac:'mac'}  
     output: {errcode:0, errmsg:'', ca1:'', ca2:'', ca3:'', id:'NEW-UUID', qrcode:''}  
     注意：此消息在厂测模式下运行，无需使用register_ack命令进行确认，人工看界面即可。  
-2，MQTT: heartbeat, 锁心跳命令，定时向mqtt发送消息，校准时间，及获取mqtt服务端缓存着的命令  
+✔2，MQTT: heartbeat, 锁心跳命令，定时向mqtt发送消息，校准时间，及获取mqtt服务端缓存着的命令  
     direct: LOCK->SERVICE, MQTT  
     input: {cmd:'heartbeat', id:'UUID'}  
     output: {errcode: 0, errmsg:'', time:timestamp}  
     注意：此命令如果只是为了heartbeat，没有返回其他命令也不需进行ACK确认  
-3，MQTT: log, 锁日志上传命令，锁上电的空闲时间段上传日志  
+✔3，MQTT: log, 锁日志上传命令，锁上电的空闲时间段上传日志  
     direct: LOCK->SERVICE, MQTT  
     input: {cmd:'log', id:'UUID', log:[{action:scan, time:timestamp},{action:password, time:timestamp},...]}  
     output: {errcode: 0, errmsg:''}  
-4.1，MQTT: qrcode, 锁获取临时场景二维码命令qrcode  
+✔4.1，MQTT: qrcode, 锁获取临时场景二维码命令qrcode  
     命令过程：  
       锁端生成一个scene_id，这是个1-100000之间的随机数。  
       锁将scene_id发到锁服务端的mqtt服务器  
@@ -102,7 +92,7 @@ API分为门锁向门锁服务的mqtt请求部分、门锁服务供其他应用�
     direct: LOCK->SERVICE, MQTT  
     input: {cmd:'qrcode', id:'UUID', scene_id:'GENERATED_SCENE_ID', expire: TIME_IN_SECONDS}  
     output: {errcode: 0, errmsg:'', qrcode:'GENERATED_QRCODE', expire:600}  
-4.2，API: /apis/lock/send_scene_id_to_lock, 用户通过公众号页面（或微信扫一扫，或其他应用子系统）扫码后，发送scene_id给锁服务端，并由锁服务端发送给锁终端，在锁端对scene_id进行匹配校验  
+✔4.2，API: /apis/lock/send_scene_id, 用户通过公众号页面（或微信扫一扫，或其他应用子系统）扫码后，发送scene_id给锁服务端，并由锁服务端发送给锁终端，在锁端对scene_id进行匹配校验  
     命令过程：  
       用户扫描锁上面通过qrcode命令得到的二维码（微信二维码用微信扫一扫，其他平台调用相应API，自己系统生成的二维码，则使用自己系统的扫描界面）  
       扫描后，应用子系统会得到scene_id（微信则是由微信服务器发送给第三方平台，通过XML消息方式，我们可以提取其中的scene_id）  
@@ -111,18 +101,18 @@ API分为门锁向门锁服务的mqtt请求部分、门锁服务供其他应用�
     input: {id:'UUID', scene_id:'GENERATED_SCENE_ID'}  
     output: {errcode: 0, errmsg:''}  
     注意：此命令的处理是异步的，我们也可以等待，但有可能导致http超时  
-4.3，MQTT: send_scene_id_to_lock, 锁服务端发送scene_id到锁端命令，锁检查scene_id是否匹配  
+✔4.3，MQTT: send_scene_id, 锁服务端发送scene_id到锁端命令，锁检查scene_id是否匹配  
     命令过程：  
       锁服务端收到4.2的命令后，通过mqtt发送给锁  
     direct: SERVICE->LOCK, MQTT  
-    input: {cmd_id: 'ID_IN_LOCK_CMD', cmd:'send_scene_id_to_lock', id:'UUID', scene_id:'GENERATED_SCENE_ID'}  
+    input: {cmd_id: 'ID_IN_LOCK_CMD', cmd:'send_scene_id', id:'UUID', scene_id:'GENERATED_SCENE_ID'}  
     output: {errcode: 0, errmsg:''}  
-4.4，MQTT: send_scene_id_to_lock_ack, 锁返回send_scene_id_to_lock的处理结果
+4.4，MQTT: cmd_ack, 锁返回send_scene_id的处理结果
     命令过程：  
-      锁服务端收到锁反馈的ack命令后，将缓存记录从LockCmd中删除，并发送通知给APP，不用再回复给LOCK  
+      锁服务端收到锁反馈的ack命令后，将ack更新到LockCmd中，并发送通知给APP，不用再回复给LOCK  
     direct: LOCK->SERVICE->APP, MQTT  
-    input: {cmd_id: 'ID_IN_LOCK_CMD', cmd:'send_scene_id_to_lock_ack', id:'UUID', errcode: 0}  
-5，API: /apis/lock/find, 应用子系统通过UUID得到某把锁的信息，主要是判断该锁是否存在，一般用在应用子系统中用户添加锁的时候  
+    input: {cmd_id: 'ID_IN_LOCK_CMD', cmd:'cmd_ack', id:'UUID', errcode: 0}  
+✔5，API: /apis/lock/find, 应用子系统通过UUID得到某把锁的信息，主要是判断该锁是否存在，一般用在应用子系统中用户添加锁的时候  
     命令过程：  
       用户在APP中输入锁的UUID或MAC，（如果是微信锁，则扫描微信二维码，得到qrcode/device_id），组成查询字符串  
       锁服务端，根据条件查找锁信息，（是否将此锁置为已被使用，之后再扫描则失效并返回错误信息？）并返回。（未来是否要加强条件，如何判断该锁确实属于此用户？）  
@@ -130,25 +120,25 @@ API分为门锁向门锁服务的mqtt请求部分、门锁服务供其他应用�
     input: {where: {id:'INPUT-UUID', mac:'INPUT-MAC', qrcode:'SCAN-QRCODE', device_id:'SCAN-DEVICE_ID'}}, where中的条件只需填写一项就行  
     output: {errcode: 0, errmsg:'', data: {...}}  
 
-6.1，API: /apis/lock/password, 应用子系统生成一个6位密码或者用户输入一个6位密码，给锁服务端，并由锁服务端发送给锁终端保存，供用户使用密码开门  
+✔6.1，API: /apis/lock/password, 应用子系统生成一个6位密码或者用户输入一个6位密码，给锁服务端，并由锁服务端发送给锁终端保存，供用户使用密码开门  
     命令过程：  
       用户订房，或者管理员设置开门密码等情况下，需要发送密码给锁  
     direct: APP->SERVICE->LOCK  
     input: {id:'UUID', password:'MD5-PASSWORD'}  
     output: {errcode: 0, errmsg:''}  
     注意：此命令的处理是异步的，我们也可以等待，但有可能导致http超时  
-6.2，MQTT: password, 锁服务端发送密码到锁端命令  
+✔6.2，MQTT: password, 锁服务端发送密码到锁端命令  
     命令过程：  
       锁服务端收到6.1的命令后，通过mqtt发送给锁  
     direct: SERVICE->LOCK, MQTT  
     input: {cmd_id: 'ID_IN_LOCK_CMD', cmd:'password', id:'UUID', password:'MD5-PASSWORD', user:'system'} or {cmd_id: 'ID_IN_LOCK_CMD', cmd:'password', id:'UUID', password:'MD5-PASSWORD', start:TIMESTAMP, end:TIMESTAMP, user:'windsome'}  
     output: {errcode: 0, errmsg:'', cmd_id: 'ID_IN_LOCK_CMD'}  
-6.3，MQTT: password_ack, 锁返回password的处理结果  
+6.3，MQTT: cmd_ack, 锁返回password的处理结果  
     命令过程：  
       锁服务端收到锁反馈的ack命令后，将缓存记录从LockCmd中删除，并发送通知给APP，不用再回复给LOCK  
     direct: LOCK->SERVICE->APP, MQTT  
-    input: {cmd_id: 'ID_IN_LOCK_CMD', cmd:'password_ack', id:'UUID', errcode: 0}  
-7.1, API: /apis/lock/config, 配置某个锁(类似password)  
+    input: {cmd_id: 'ID_IN_LOCK_CMD', cmd:'cmd_ack', id:'UUID', errcode: 0}  
+7.1, API: /apis/lock/config, 配置某个锁(类似password)[管理员功能]  
     命令过程：  
       配置锁，一般模式下不能配置锁ID，管理模式可以配置锁ID  
     direct: APP->SERVICE->LOCK  
@@ -158,10 +148,10 @@ API分为门锁向门锁服务的mqtt请求部分、门锁服务供其他应用�
 7.2，MQTT: config, 配置锁  
     direct: SERVICE->LOCK, MQTT  
     input: {cmd_id: 'ID_IN_LOCK_CMD', cmd:'config', ...LAST_STEP_CONFIG_CONTENT}  
-7.3，MQTT: config_ack, 锁返回处理结果  
+7.3，MQTT: cmd_ack, 锁返回处理结果  
     direct: LOCK->SERVICE->APP, MQTT  
-    input: {cmd_id: 'ID_IN_LOCK_CMD', cmd:'config_ack', id:'UUID', errcode: 0}  
-8.1, API: /apis/lock/reset, 重置锁，清空存在的密码相关信息()  
+    input: {cmd_id: 'ID_IN_LOCK_CMD', cmd:'cmd_ack', id:'UUID', errcode: 0}  
+8.1, API: /apis/lock/reset, 重置锁，清空存在的密码相关信息[管理员功能]  
     命令过程：  
       配置锁，一般模式下不能配置锁ID，管理模式可以配置锁ID  
     direct: APP->SERVICE->LOCK  
@@ -171,11 +161,11 @@ API分为门锁向门锁服务的mqtt请求部分、门锁服务供其他应用�
 8.2，MQTT: reset, 重置锁  
     direct: SERVICE->LOCK, MQTT  
     input: {cmd_id: 'ID_IN_LOCK_CMD', cmd:'reset', ...LAST_STEP_CONFIG_CONTENT}  
-8.3，MQTT: reset_ack, 锁返回处理结果  
+8.3，MQTT: cmd_ack, 锁返回处理结果  
     direct: LOCK->SERVICE->APP, MQTT  
-    input: {cmd_id: 'ID_IN_LOCK_CMD', cmd:'reset_ack', id:'UUID', errcode: 0}  
-9, MQTT转发API消息（send_scene_id_to_lock, password, config, reset都是此类消息），都是异步消息，可以写一个通用方法供其他api调用。该系列函数通过一个cmd_id来标识所处理的命令。  
-9.1, APP调用API，SERVICE会将命令缓存进数据库LockCmd表，并返回ID，继续发向MQTT  
+    input: {cmd_id: 'ID_IN_LOCK_CMD', cmd:'cmd_ack', id:'UUID', errcode: 0}  
+✔9, MQTT转发API消息（send_scene_id, password, config, reset都是此类消息），都是异步消息，可以写一个通用方法供其他api调用。该系列函数通过一个cmd_id来标识所处理的命令。  
+✔9.1, APP调用API，SERVICE会将命令缓存进数据库LockCmd表，并返回ID，继续发向MQTT  
     命令过程：  
       APP调用API后，首先将命令存进LockCmd，并返回ID  
       调用MQTT将包含CMD_ID的命令publish到锁  
@@ -184,83 +174,123 @@ API分为门锁向门锁服务的mqtt请求部分、门锁服务供其他应用�
     direct: APP->SERVICE->LOCK  
     input: {id:'UUID', ...CMD_CONTENTS}  
     output: {errcode: 0, errmsg:'', cmd_id: 'ID_IN_LOCK_CMD'}  
-9.2, MQTT publish消息  
+✔9.2, MQTT publish消息  
     direct: SERVICE->LOCK, MQTT  
     input: {cmd_id: 'ID_IN_LOCK_CMD', ...CMD_CONTENTS, cmd:'OVERRIDE_CMD_NAME' }  
-9.3, MQTT: cmd_ack, 锁返回处理结果给锁服务端  
+✔9.3, MQTT: cmd_ack, 锁返回处理结果给锁服务端  
     命令过程：  
       锁服务端根据cmd_id更新LockCmd表中相应记录的ack字段  
     direct: LOCK->SERVICE->APP, MQTT  
     input: {cmd_id: 'ID_IN_LOCK_CMD', cmd:'cmd_ack', id:'UUID', errcode: 0, ...OTHER_RESPONSE_MESSAGE}  
-9.4, API: check_cmd, APP主动从锁服务端查询命令执行结果，一般再命令超时未完成的情况下过段时间后主动调用。  
+✔9.4, API: check_cmd, APP主动从锁服务端查询命令执行结果，一般再命令超时未完成的情况下过段时间后主动调用。  
     命令过程：  
-      配置锁，一般模式下不能配置锁ID，管理模式可以配置锁ID  
+      去LockCmd表查询命令是否完成返回，并返回命令的结果  
     direct: APP->SERVICE  
     input: {cmd_id: 'ID_IN_LOCK_CMD'}  
     output: {LockCmd.ack字段内容}  
-
-## mqtt消息测试
+✔10.1-3, API: /apis/lock/get_config, 获取锁信息(类似password)[管理员功能]
+    direct: APP->SERVICE->LOCK  
+    input: {id:'UUID', cmd:'get_config'}  
+    output: {errcode: 0, errmsg:'', cmd_id: 'ID_IN_LOCK_CMD',id:'', ca1:'', ca2:'', ca3:'',software_version:'1.1.1',hardware_version:'1.0.1',mac:'MAC', ...OTHER_CONFIG}  
+    注意：此命令的处理是异步的，我们也可以等待，但有可能导致http超时  
+✔10.2, MQTT publish
+10.3, MQTT cmd_ack
+✔11.1-3, API: /apis/lock/update, 升级锁软件(类似password)[管理员功能]  
+    direct: APP->SERVICE->LOCK  
+    input: {id:'UUID', cmd:'update', url:'https://......'}  
+    output: {errcode: 0, errmsg:'', cmd_id: 'ID_IN_LOCK_CMD'}  
+    注意：此命令的处理是异步的，我们也可以等待，但有可能导致http超时  
+✔11.2, MQTT publish
+11.3, MQTT cmd_ack
+✔12.1-3, API: /apis/lock/get_password_list, 获取锁的密码列表(类似password)[管理员功能]  
+    direct: APP->SERVICE->LOCK  
+    input: {id:'UUID', cmd:'update', url:'https://......'}  
+    output: {errcode: 0, errmsg:'', cmd_id: 'ID_IN_LOCK_CMD'}  
+    注意：此命令的处理是异步的，我们也可以等待，但有可能导致http超时  
+✔12.2, MQTT publish
+12.3, MQTT cmd_ack
+✔13, API: /apis/lock/get_lock_list, 获取锁列表
+    direct: APP->SERVICE
+    input: {id:'UUID', where:{}, offset:0, limit:10}  
+    output: {errcode: 0, errmsg:'', data:[{LOCK-INFO-IN-DB},{LOCK-INFO-IN-DB}]}  
 ```
-#subscribe to topic
-mosquitto_sub -t /broker/smartlock/\# -v --cafile ca.crt -h mqtt.lancertech.net -p 8883
-mosquitto_sub -t /broker/smartlock/server -v --cafile ca.crt -h mqtt.lancertech.net -p 8883 
-#publish to topic
-mosquitto_pub -t /broker/smartlock/server --cafile ca.crt -h mqtt.lancertech.net -p 8883 -m '{"uuid":"ll_02330df03ffd9","cmd":"get_access_token"}'
-#锁注册register
-mosquitto_pub -t /broker/smartlock/server --cafile ca.crt -h mqtt.lancertech.net -p 8883 -m '{"cmd":"register","id":"1","mac":"00:22:68:11:e5:68"}'
-#锁心跳heartbeat
-mosquitto_pub -t /broker/smartlock/server --cafile ca.crt -h mqtt.lancertech.net -p 8883 -m '{"cmd":"heartbeat","id":"1"}'
-#锁日志log
-mosquitto_pub -t /broker/smartlock/server --cafile ca.crt -h mqtt.lancertech.net -p 8883 -m '{"cmd":"log","id":"1","log":[{"action":"open", "time":12342},{"action":"close","time":12345}]}'
-#锁获取qrcode
-mosquitto_pub -t /broker/smartlock/server --cafile ca.crt -h mqtt.lancertech.net -p 8883 -m '{"cmd":"qrcode","id":"1","scene_id":12345,"expire": 600}'
-
+## API模拟测试（send_scene_id, password, config, reset）
 ```
-## API模拟测试（send_scene_id_to_lock, password, config, reset）
 注意：手动测试需要速度比较快，API超时时间默认为20秒，可以将expire时间设置得长一点，方便测试的时候去填写命令中的ID_IN_LOCK_CMD。
-步骤：
-1, 启动新终端，运行mosquitto_sub，用来监听消息，查看cmd_id
-2, 在又一个新终端运行curl命令调用api
-3, 读取mosquitto_sub监听到的cmd_id
-4, 再起一个新终端，修改export CMDSTR='{"errcode":0,"cmd":"cmd_ack","cmd_id":"ID_IN_LOCK_CMD","id":"1"}' 中的ID_IN_LOCK_CMD，并重新export，注意中间无空格
-5, 看api终端的返回值
-```
-监听server，用以读取ID_IN_LOCK_CMD
-mosquitto_sub -t /broker/smartlock/server -v --cafile ca.crt -h mqtt.lancertech.net -p 8883 
-    APP调用send_scene_id_to_lock：
-curl 'http://localhost:3000/apis/lock/send_scene_id_to_lock?id=1&scene_id=2'
+* 步骤：
+1,启动新终端，运行mosquitto_sub，用来监听消息，查看cmd_id
+2,在又一个新终端运行curl命令调用api
+3,读取mosquitto_sub监听到的cmd_id
+4,再起一个新终端，修改export CMDSTR='{"errcode":0,"cmd":"cmd_ack","cmd_id":"ID_IN_LOCK_CMD","id":"1"}' 中的ID_IN_LOCK_CMD，并重新export，注意中间无空格
+5,看api终端的返回值
+* 监听server，用以读取ID_IN_LOCK_CMD
+mosquitto_sub -t /broker/smartlock1/server -v --cafile /download/ca.crt -h mqtt.lancertech.net -p 8883 
+* APP调用send_scene_id：
+curl 'http://localhost:3000/apis/lock/send_scene_id?id=1&scene_id=2'
 export CMDSTR='{"errcode":0,"cmd":"cmd_ack","cmd_id":"ID_IN_LOCK_CMD","id":"1"}'
-mosquitto_pub -t /broker/smartlock/server --cafile /download/ca.crt -h mqtt.lancertech.net -p 8883 -m $CMDSTR 
-    APP调用password：
+mosquitto_pub -t /broker/smartlock1/server --cafile /download/ca.crt -h mqtt.lancertech.net -p 8883 -m $CMDSTR 
+* APP调用password：
 curl 'http://localhost:3000/apis/lock/password?id=1&password=223456'
 export CMDSTR='{"errcode":0,"cmd":"cmd_ack","cmd_id":"ID_IN_LOCK_CMD","id":"1"}'
-mosquitto_pub -t /broker/smartlock/server --cafile /download/ca.crt -h mqtt.lancertech.net -p 8883 -m $CMDSTR
-    APP调用config(管理员接口，其他人要调需向管理员认证)：
+mosquitto_pub -t /broker/smartlock1/server --cafile /download/ca.crt -h mqtt.lancertech.net -p 8883 -m $CMDSTR
+* APP调用config(管理员接口，其他人要调需向管理员认证)：
 curl 'http://localhost:3000/apis/lock/config?id=1&password=223456'
 export CMDSTR='{"errcode":0,"cmd":"cmd_ack","cmd_id":"ID_IN_LOCK_CMD","id":"1"}'
-mosquitto_pub -t /broker/smartlock/server --cafile /download/ca.crt -h mqtt.lancertech.net -p 8883 -m $CMDSTR
-    APP调用reset(管理员接口，其他人要调需向管理员认证)：
+mosquitto_pub -t /broker/smartlock1/server --cafile /download/ca.crt -h mqtt.lancertech.net -p 8883 -m $CMDSTR
+* APP调用reset(管理员接口，其他人要调需向管理员认证)：
 curl 'http://localhost:3000/apis/lock/reset?id=1'
 export CMDSTR='{"errcode":0,"cmd":"cmd_ack","cmd_id":"ID_IN_LOCK_CMD","id":"1"}'
-mosquitto_pub -t /broker/smartlock/server --cafile /download/ca.crt -h mqtt.lancertech.net -p 8883 -m $CMDSTR
+mosquitto_pub -t /broker/smartlock1/server --cafile /download/ca.crt -h mqtt.lancertech.net -p 8883 -m $CMDSTR
 ```
 ## LOCK主动消息模拟测试
 ```
-mosquitto_pub -t /broker/smartlock/server --cafile ca.crt -h mqtt.lancertech.net -p 8883 -m '{"cmd":"register","id":"1","mac":"00:22:68:11:e5:68"}'
-mosquitto_pub -t /broker/smartlock/server --cafile ca.crt -h mqtt.lancertech.net -p 8883 -m '{"cmd":"heartbeat","id":"1"}'
-mosquitto_pub -t /broker/smartlock/server --cafile ca.crt -h mqtt.lancertech.net -p 8883 -m '{"cmd":"log","id":"1","log":[{"action":"open", "time":12342},{"action":"close","time":12345}]}'
+* subscribe to topic
+mosquitto_sub -t /broker/smartlock1/\# -v --cafile /download/ca.crt -h mqtt.lancertech.net -p 8883
+mosquitto_sub -t /broker/smartlock1/server -v --cafile /download/ca.crt -h mqtt.lancertech.net -p 8883 
+* 锁获取access_token
+mosquitto_pub -t /broker/smartlock1/server --cafile /download/ca.crt -h mqtt.lancertech.net -p 8883 -m '{"uuid":"ll_02330df03ffd9","cmd":"get_access_token"}'
+* 锁注册register
+mosquitto_pub -t /broker/smartlock1/server --cafile /download/ca.crt -h mqtt.lancertech.net -p 8883 -m '{"cmd":"register","id":"1","mac":"00:22:68:11:e5:68"}'
+* 锁心跳heartbeat
+mosquitto_pub -t /broker/smartlock1/server --cafile /download/ca.crt -h mqtt.lancertech.net -p 8883 -m '{"cmd":"heartbeat","id":"1"}'
+* 锁日志log
+mosquitto_pub -t /broker/smartlock1/server --cafile /download/ca.crt -h mqtt.lancertech.net -p 8883 -m '{"cmd":"log","id":"1","log":[{"action":"open", "time":12342},{"action":"close","time":12345}]}'
+* 锁获取qrcode
+mosquitto_pub -t /broker/smartlock1/server --cafile /download/ca.crt -h mqtt.lancertech.net -p 8883 -m '{"cmd":"qrcode","id":"1","scene_id":12345,"expire": 600}'
 ```
 ## 门锁超级用户管理系统
-1, /apis/db/list_user 获取数据库中用户列表  
+```
+功能：超级管理员管理所有的锁，功能包含：  
+× 锁列表及按条件查询（list_lock）
+× 锁信息（ID，MAC，MQTT-INFO，GPS-INFO，当前时间，欢迎图片，硬件版本，软件版本，CA证书等）查看修改(get_config)    
+× 锁中密码列表(get_password_list)，重置所有密码(reset)，设置密码(password)  
+× 锁日志查看(读取数据库内容)  
+× 软件升级（update）  
+× Admin用户管理，包含列表、授权、取消授权，将有权限的用户openid登记在Admin表中  
+界面列表  
+1, 设备列表页面，分页列出所有锁
+/apis/lock/get_lock_list
+{ where: { createAt: {$bg: 123413422} },
+  offset:0,
+  limit:10
+}
+2, 设备详情页面，最上面为设备详细信息，下面为功能按钮（得到密码列表，重置所有密码，设置密码，升级，读取日志），下面为命令返回的内容
+3, 是否需要批量功能？
+```
+## 普通用户开锁子系统
+### 通过公众号页面扫描开锁
+### 通过微信扫一扫开锁
+### 通过输入密码开锁 （不需与服务器联系，不需使用手机）
+```
+功能：用户通过公众号页面扫描二维码， 
+× 锁列表及按条件查询（list_lock）
+2, /apis/db/list_user 获取数据库中用户列表  
     支持POST/GET两种方式  
     参数：
-```
         offset：开始记录index，默认为0
         count: 获取记录条数，默认为10
         where：获取记录条件
-```
     例子：
-```
     GET模式：
     curl 'http://localhost:3000/apis/db/list_lock?offset=0&count=10&where={"owner":"247f215e-31cc-4648-8eb4-b3c913ac67b6"}'
     POST模式：http://localhost:3000/apis/db/list_lock
@@ -302,6 +332,7 @@ echo ' '
 ```
 # TIPS
 ## JS中!, !!, !!! 的使用
+```
 227         debug ("undefined expire", expire, "!expire", !expire, "!!expire", !!expire, "!!!expire", !!!expire);
 228         expire = null;
 229         debug ("null expire", expire, "!expire", !expire, "!!expire", !!expire, "!!!expire", !!!expire);
@@ -326,6 +357,20 @@ echo ' '
   app:server:apis "11" expire +0ms 11 !expire false !!expire true !!!expire false
   app:server:apis {} expire +0ms {} !expire false !!expire true !!!expire false
   app:server:apis {a} expire +16ms { a: 'a' } !expire false !!expire true !!!expire false
+```
+
+## 比较好的markdown编辑器retext
+```apt-get install retext```
+
+## 使用redux-form时，使用initialValues作为初始值，但初始值在redux-form组件中改变后并不更新？
+原因是创建redux-form时需要增加enableReinitialize:true选项  
+```
+export default reduxForm({
+    form: 'lock',  // a unique identifier for this form
+    enableReinitialize: true // if you change initialValues, you need do it to take effect.
+})(EditLockForm)
+```
+*重要问题，我始终没弄明白redux-form例子“Initialize From State”并没有设置该属性却表现正常能够动态改变初始值，为什么它可以？
 
 ## 攻击破解锁系统
 1,假冒锁，获取锁中的ca证书及锁uuid，用程序模仿锁，获得相关数据  

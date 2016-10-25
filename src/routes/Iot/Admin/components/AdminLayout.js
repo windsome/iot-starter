@@ -1,18 +1,21 @@
 import React from 'react'
 import Header from './Header'
-import classes from './IotLayout.scss'
+import classes from './AdminLayout.scss'
 
-export const IotLayout = ({ children }) => (
+export const Layout = ({ info, header, main }) => (
   <div className={classes.outContainer}>
-    <Header />
+    {info || ''}
+    <div>
+      {header || ''}
+    </div>
     <div className={classes.mainContainer}>
-      {children}
+      {main || ''}
     </div>
   </div>
 )
 
-IotLayout.propTypes = {
+Layout.propTypes = {
   children: React.PropTypes.element.isRequired
 }
 
-export default IotLayout
+export default Layout

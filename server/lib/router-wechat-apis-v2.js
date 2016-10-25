@@ -69,9 +69,14 @@ export default class WechatApi {
         router.all('/jsapi/get_sign_package', this.getSignPackage.bind(this));
         // device
         router.all('/device/get_bind_device', this.getBindDevice());
-        // lock
-        router.all('/lock/send_scene_id_to_lock', this.sendSceneIdToLock.bind(this));
+        // lock 
+        router.all('/lock/check_cmd', this.checkLockCmd.bind(this));
+        router.all('/lock/send_scene_id', this.sendSceneIdToLock.bind(this));
         router.all('/lock/password', this.setPassword.bind(this));
+        router.all('/lock/get_password_list', this.getPasswordList.bind(this));
+        router.all('/lock/get_config', this.getConfig.bind(this));
+        router.all('/lock/update', this.updateLock.bind(this));
+        router.all('/lock/get_lock_list', dbList(models.Lock));
         router.all('/lock/find', this.findLock.bind(this));
         //router.all('/lock/config', this.getBindDevice());
         //router.all('/lock/reset', this.getBindDevice());
@@ -192,7 +197,7 @@ export default class WechatApi {
         // output: {errcode: 0, errmsg:''}  
         var id = ctx.request.query.id || ctx.request.body.id;
         var scene_id = ctx.request.query.scene_id || ctx.request.body.scene_id;
-        var lockCmd = await this._sendCmdToMqtt (this.mqttTopicPrefix+id, { cmd: 'send_scene_id_to_lock', id: id, scene_id: scene_id });
+        var lockCmd = await this._sendCmdToMqtt (this.mqttTopicPrefix+id, { cmd: 'send_scene_id', id: id, scene_id: scene_id });
         ctx.body = lockCmd;
         console.log ("sendSceneIdToLock", lockCmd);
     }
@@ -205,6 +210,34 @@ export default class WechatApi {
         var lockCmd = await this._sendCmdToMqtt (this.mqttTopicPrefix+id, { cmd: 'password', id: id, password: password });
         ctx.body = lockCmd;
         console.log ("setPassword", lockCmd);
+    }
+    async getPasswordList (ctx, next) {
+        // direct: APP->SERVICE->LOCK  
+        // input: {id:'UUID', cmd:'update', url:'https://......'}  
+        // output: {errcode: 0, errmsg:'', cmd_id: 'ID_IN_LOCK_CMD'}  
+        var id = ctx.request.query.id || ctx.request.body.id;
+        var lockCmd = await this._sendCmdToMqtt (this.mqttTopicPrefix+id, { cmd: 'get_password_list', id: id });
+        ctx.body = lockCmd;
+        console.log ("getPasswordList", lockCmd);
+    }
+    async getConfig (ctx, next) {
+        // direct: APP->SERVICE->LOCK  
+        // input: {id:'UUID', cmd:'get_config'}  
+        // output: {errcode: 0, errmsg:'', cmd_id: 'ID_IN_LOCK_CMD',id:'', ca1:'', ca2:'', ca3:'',software_version:'1.1.1',hardware_version:'1.0.1',mac:'MAC', ...OTHER_CONFIG}  
+        var id = ctx.request.query.id || ctx.request.body.id;
+        var lockCmd = await this._sendCmdToMqtt (this.mqttTopicPrefix+id, { cmd: 'get_config', id: id });
+        ctx.body = lockCmd;
+        console.log ("getConfig", lockCmd);
+    }
+    async updateLock (ctx, next) {
+        // direct: APP->SERVICE->LOCK  
+        // input: {id:'UUID', cmd:'update', url:'https://......'}  
+        // output: {errcode: 0, errmsg:'', cmd_id: 'ID_IN_LOCK_CMD'}  
+        var id = ctx.request.query.id || ctx.request.body.id;
+        var url = ctx.request.query.url || ctx.request.body.url;
+        var lockCmd = await this._sendCmdToMqtt (this.mqttTopicPrefix+id, { cmd: 'update', id: id, url: url });
+        ctx.body = lockCmd;
+        console.log ("updateLock", lockCmd);
     }
     async _sendCmdToMqtt (topic, cmd, expire) {
         // save cmd in LockCmd, and then send to mqtt.
@@ -245,8 +278,28 @@ export default class WechatApi {
                 resolve();
             }, timeout);
         });
-     }
-
+    }
+    async checkLockCmd (ctx, next) {
+        // direct: APP->SERVICE  
+        // input: {cmd_id: 'ID_IN_LOCK_CMD'}  
+        // output: {LockCmd.ack字段内容}  
+        var cmd_id = ctx.request.query.cmd_id || ctx.request.body.cmd_id;
+        if (!cmd_id) {
+            ctx.body = { errcode: -1, errmsg: 'parameter error! no cmd_id!' };
+            return;
+        }
+        var instance = await models.LockCmd.findOne({ where: { id: cmd_id } });
+        var obj = instance && instance.get({ plain: true });
+        if (obj) {
+            if (!obj.ack) {
+                ctx.body = JSON.parse(obj.ack);
+                return;
+            } else {
+                return { errcode: 1, errmsg: 'timeout', cmd_id: cmd_id };
+            }
+        }
+        ctx.body = { errcode: -1, errmsg: 'not find such command!' };
+    }
     async findLock (ctx, next) {
         // direct: APP->SERVICE  
         // input: {where: {id:'INPUT-UUID', mac:'INPUT-MAC', qrcode:'SCAN-QRCODE', device_id:'SCAN-DEVICE_ID'}}, where中的条件只需填写一项就行  
@@ -265,7 +318,7 @@ export default class WechatApi {
             var obj = instance && instance.get({ plain: true });
             if (obj) {
                 console.log ("windsome", obj);
-                ctx.body = { errcode: 0, ...obj };
+                ctx.body = { errcode: 0, data: obj };
                 return;
             }
         }
