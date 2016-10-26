@@ -135,7 +135,7 @@ export default class WechatApi {
             var instance = await models.Lock.create ({ mac: msg.mac });
             var obj = instance && instance.get({ plain: true });
             if (obj) {
-                this.mqttClient.publish(this.mqttTopicPrefix + msg.id, JSON.stringify({ errcode: 0, id: obj.id }), (err) => {
+                this.mqttClient.publish(this.mqttTopicPrefix + msg.id, JSON.stringify({ cmd:'register_ack', errcode: 0, id: obj.id }), (err) => {
                     console.log ("publish", err);
                 });
             } else {
@@ -148,7 +148,7 @@ export default class WechatApi {
             // input: {cmd:'heartbeat', id:'UUID'}  
             // output: {errcode: 0, errmsg:'', time:timestamp}  
             var timestamp = Math.round(new Date().getTime()/1000);
-            this.mqttClient.publish(this.mqttTopicPrefix + msg.id, JSON.stringify({ errcode: 0, time: timestamp }), (err) => {
+            this.mqttClient.publish(this.mqttTopicPrefix + msg.id, JSON.stringify({ cmd:'heartbeat_ack', errcode: 0, time: timestamp }), (err) => {
                 console.log ("publish", err);
             });
             break;
@@ -172,7 +172,7 @@ export default class WechatApi {
             // output: {errcode: 0, errmsg:'', qrcode:'GENERATED_QRCODE', expire: TIME_IN_SECONDS}  
             var qrcode = await this.wechat.qrcode.createTmpQRCode (msg.scene_id, msg.expire);
             console.log ("get qrcode", qrcode);
-            this.mqttClient.publish(this.mqttTopicPrefix + msg.id, JSON.stringify(qrcode), (err) => {
+            this.mqttClient.publish(this.mqttTopicPrefix + msg.id, JSON.stringify({ cmd: 'qrcode_ack', ...qrcode }), (err) => {
                 console.log ("publish", err);
             });
             break;
