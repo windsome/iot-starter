@@ -24,7 +24,7 @@ export default class WechatBase {
         this.opts = opts;
     }
 
-    async getAccessToken () {
+    async getAccessToken (force) {
         if (this.debug) {
             console.log ("where store data?");
         }
@@ -32,7 +32,7 @@ export default class WechatBase {
         
         var currentTimestamp = parseInt(new Date().getTime() / 1000);
         var expireTime = (cachedToken && cachedToken.expire_time) || 0;
-        if (expireTime < currentTimestamp) {
+        if (force || (expireTime < currentTimestamp)) {
             // ticket has expire, need to request new access token.
             var url = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid="+this.appId+"&secret="+this.appSecret;
             var resJson = await this.get(url);
@@ -57,7 +57,7 @@ export default class WechatBase {
         var data;
         try {
             var res = await fetch(url, opts || {} );
-            data = res.json();
+            data = await res.json();
         } catch (error) { 
             console.log('fetch error: ' + error.message);
             let err = new Error(error.message);
@@ -74,7 +74,7 @@ export default class WechatBase {
             
             if (data.errcode === 40001 && retry > 0) {
                 // maybe access_token is timeout. update access_token, and retry!
-                await this.getAccessToken ();
+                await this.getAccessToken (true);
                 return await this.request(url, opts, retry-1);
             }
             throw err;
