@@ -175,7 +175,7 @@ export default class WechatApi {
             var scene_id = Math.floor (Math.random()*100000);
             var obj = {id: msg.id, scene_id: scene_id};
             this.redis._redisClient.hmset('qrscene', scene_id.toString(), JSON.stringify(obj));
-            var qrcode = await this.wechat.qrcode.createTmpQRCode (msg.scene_id, msg.expire);
+            var qrcode = await this.wechat.qrcode.createTmpQRCode (scene_id, msg.expire);
             console.log ("get qrcode", qrcode);
             this.mqttClient.publish(this.mqttTopicPrefix + msg.id, JSON.stringify({ cmd: 'qrcode_ack', ...qrcode }), (err) => {
                 console.log ("publish", err);
