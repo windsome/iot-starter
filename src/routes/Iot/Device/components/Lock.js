@@ -1,5 +1,6 @@
 import React, { Component, PropTypes } from 'react'
 import classes from './Lock.scss'
+import QRCode from 'qrcode.react';
 
 export class Lock extends Component {
     componentDidMount () {
@@ -14,35 +15,36 @@ export class Lock extends Component {
         deinit && deinit ();
         stopHeartBeat && stopHeartBeat();
     }
-    guid() {
-        function s4() {
-            return Math.floor((1 + Math.random()) * 0x10000)
-                .toString(16)
-                .substring(1);
-        }
-        return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-            s4() + '-' + s4() + s4() + s4();
-    }
     render () {
-        var { simulator, emit2Server } = this.props;
+        var { simulator, emit2Server, emitRegister } = this.props;
         var id = simulator && simulator.config && simulator.config.id;
+        var qrcode = simulator && simulator.config && simulator.config.qrcode;
         var cache = simulator && simulator.cache && simulator.cache.slice(0);
         cache && cache.reverse();
-        var uuid = this.guid();
         return (
 <div>
   <div>
     <h1>Function</h1>
     <div>
-      <button type="button" className="btn btn-primary" onClick={emit2Server.bind(null, id, JSON.stringify({ cmd:"register",id:uuid,mac:"00:22:68:11:e5:68" }) )}>{ "Register:"+uuid }</button>
+      <button type="button" className="btn btn-primary" onClick={ emitRegister }>{ "Register:"+id }</button>
       { ' ' }
-      <button type="button" className="btn btn-primary" onClick={emit2Server.bind(null, id, JSON.stringify({ cmd:"qrcode",id:id,scene_id:123,expire:600 }) )}>Get Qrcode</button>
+      <button type="button" className="btn btn-primary" onClick={ emit2Server.bind(null, id, JSON.stringify({ cmd:"qrcode",id:id,scene_id:123,expire:600 }) ) }>Get Qrcode</button>
+      { ' ' }
+      <button type="button" className="btn btn-primary" onClick={ emit2Server.bind(null, id, JSON.stringify({ cmd:"qrcode",id:id,scene_id:123,expire:600 }) ) }>Get Qrcode</button>
     </div>
   </div>
   <div>
     <h1>Config</h1>
-    <div>
+    <div className="row">
+      <div className="col-sm-6 col-lg-6">
       { JSON.stringify(simulator.config) }
+      </div>
+      <div className="col-sm-6 col-lg-6">
+      { qrcode 
+        ? <QRCode value={qrcode} />
+        : ' '
+      }
+      </div>
     </div>
   </div>
     <div className={classes.savedWisdoms}>

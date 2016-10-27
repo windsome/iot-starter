@@ -3,13 +3,23 @@ import mqtt from 'mqtt'
 
 const { receiveMessage, setIntervalId, clearIntervalId } = createActions('RECEIVE_MESSAGE', 'SET_INTERVAL_ID', 'CLEAR_INTERVAL_ID');
 
+const guid = (() => {
+    function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1);
+    }
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+        s4() + '-' + s4() + s4() + s4();
+})();
+
 const defaultConfig = {
-    id: '1',
+    id: guid,
     mac: '00:22:68:11:e5:69',
     softversion: '1.0.0',
     hardversion: '1.1.0',
     passwords: [{start:11111, end:22222, value:'1111111', message:'111111'}],
-    qrcode:'aaa',
+    qrcode:null,
     scene_id:1,
     time:1111,
     update:'http://a.update.bin'
@@ -88,6 +98,10 @@ export const deinit = () => {
 
 export const emit2Server = (id, message) => (dispatch) => {
     if (mqttClient) mqttClient.publish(mqttTopicPrefix + 'server', message);
+}
+
+export const emitRegister = () => (dispatch) => {
+    if (mqttClient) mqttClient.publish(mqttTopicPrefix + 'server', JSON.stringify({ cmd:"register",id:defaultConfig.id,mac:defaultConfig.mac }) );
 }
 
 export const startHeartBeat = (id, interval) => (dispatch) => {

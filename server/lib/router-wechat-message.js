@@ -10,12 +10,84 @@
 import KoaJwt from 'koa-jwt'
 
 import _debug from 'debug'
-const debug = _debug('app:server:apis')
+const debug = _debug('app:server:wechat')
 
 import convert from 'koa-convert'
 var wechat = require('co-wechat');
 
-function* processMessage() {
+var apis = null;
+var redis = null;
+
+async function doEventScene (ctx, qrscene) {
+    if (apis && redis) {
+        redis._redisClient.hgetall ('qrscene',async function(err,res){
+            if (err) {
+                console.log('Error:'+ err);
+                ctx.body='error';
+                return;
+            }
+            console.dir(res);
+            var scene_value = res[qrscene];
+            if (scene_value) {
+                var obj = JSON.parse (scene_value);
+                console.log ('get qrscene', obj);
+                var lockCmd = await apis._sendCmdToMqtt (apis.mqttTopicPrefix+id, { cmd: 'open', id: obj.id });
+                ctx.body='success';
+                return;
+            }
+            ctx.body='error';
+            return;
+        });
+    }
+}
+
+async function processMessage(ctx, next) {
+    // 微信输入信息都在this.weixin上
+    var message = ctx.weixin;
+    console.log ("windsome processMessage", message);
+
+    switch (message.MsgType) {
+    case 'event': {
+        var event = message.Event && message.Event.toLowerCase();
+        switch (event) {
+        case 'subscribe': {
+            if (message.EventKey && (message.EventKey.indexOf('qrscene_') >= 0)) {
+                // get qrcode, scene_id
+                var qrscene = message.EventKey.substr(message.EventKey.indexOf('qrscene_'), 'qrscene_'.length);
+                debug ("get scene_id:"+ qrscene);
+                return await doEventScene(ctx, qrscene);
+            }
+        }
+        case 'scan': {
+            var qrscene = message.EventKey;
+            debug ("get scene_id:"+ qrscene);
+            return await doEventScene(ctx, qrscene);
+        }
+        default:
+            break;
+        }
+        break;
+    }
+    case 'text':
+        break;
+    case 'image':
+        break;
+    case 'voice':
+        break;
+    case 'video':
+        break;
+    case 'location':
+        break;
+    case 'link':
+        break;
+    default:
+        ctx.body = 'fail';
+        break;
+    }
+    ctx.body = 'success';
+}
+
+/*function* processMessage() {
   // 微信输入信息都在this.weixin上
   var message = this.weixin;
   console.log ("windsome processMessage", message);
@@ -57,11 +129,13 @@ function* processMessage() {
     ];
   }
 }
-
+*/
 export default function WechatMessage (opts) {
     opts = opts || {};
+    apis = opts.apis;
+    redis = opts.redis;
     var router = require('koa-router')(opts.router);
-    router.all('/', convert (wechat(opts.token).middleware(processMessage)));
+    router.all('/', wechat(opts.token).middleware2(processMessage));
     //router.all('/', convert (wechat('Q0hctpus1eH5xdvrXBuTYzS23OewxhgO').middleware(processMessage)));
     return router;
 }

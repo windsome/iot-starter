@@ -21,9 +21,10 @@ const app = new Koa()
 
 var session = require('koa-generic-session');
 var RedisStore = require('koa-redis');
+var rstore = new RedisStore();
 app.keys = ['keys', 'keykeys'];
 app.use(convert(session({
-  store: new RedisStore()
+  store: rstore
 })));
 
 
@@ -43,11 +44,11 @@ app.use(convert(bodyParser()));
 //var json = require('koa-json'); // response json body.
 //app.use(convert(json()));
 
-var routerWechatMessage = WechatMessage({ router:{prefix: '/wechat'}, token:'Q0hctpus1eH5xdvrXBuTYzS23OewxhgO' });
-app.use(routerWechatMessage.routes()).use(routerWechatMessage.allowedMethods());
-
-var wechat2 = new WechatApi2({ wechat: {appId:'wx1a6eca02cffc398c', appSecret:'e8bed04caeabe4129674a289847eb509', origin:'gh_9e62dd855eff'}, router: {prefix: '/apis'}, jwt: {secret: 'mysecret', expiresIn:3600 } });
+var wechat2 = new WechatApi2({ wechat: {appId:'wx1a6eca02cffc398c', appSecret:'e8bed04caeabe4129674a289847eb509', origin:'gh_9e62dd855eff'}, router: {prefix: '/apis'}, jwt: {secret: 'mysecret', expiresIn:3600 }, redis: rstore });
 app.use(wechat2.router.routes()).use(wechat2.router.allowedMethods());
+
+var routerWechatMessage = WechatMessage({ router:{prefix: '/wechat'}, token:'Q0hctpus1eH5xdvrXBuTYzS23OewxhgO', apis: wechat2, redis: rstore });
+app.use(routerWechatMessage.routes()).use(routerWechatMessage.allowedMethods());
 
 // Enable koa-proxy if it has been enabled in the config.
 if (config.proxy && config.proxy.enabled) {

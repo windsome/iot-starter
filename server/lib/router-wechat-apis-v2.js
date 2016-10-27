@@ -16,6 +16,7 @@ export default class WechatApi {
         // init router for apis.
         var router = require('koa-router')(this.opts.router);
         this.router = router;
+        this.redis =  this.opts.redis;
 
         // init wechat middleware.
         this.wechat = new Wechat(this.opts.wechat);
@@ -76,6 +77,7 @@ export default class WechatApi {
         router.all('/lock/get_password_list', this.getPasswordList.bind(this));
         router.all('/lock/get_config', this.getConfig.bind(this));
         router.all('/lock/update', this.updateLock.bind(this));
+        router.all('/lock/open', this.openLock.bind(this));
         router.all('/lock/get_lock_list', dbList(models.Lock));
         router.all('/lock/find', this.findLock.bind(this));
         //router.all('/lock/config', this.getBindDevice());
@@ -132,7 +134,7 @@ export default class WechatApi {
             // direct: LOCK->SERVICE, MQTT  
             // input: {cmd:'register', id: 'temp-UUID', mac:'mac'}  
             // output: {errcode:0, errmsg:'', ca1:'', ca2:'', ca3:'', id:'NEW-UUID', qrcode:''}  
-            var instance = await models.Lock.create ({ mac: msg.mac });
+            var instance = await models.Lock.create ({ id: msg.id, mac: msg.mac });
             var obj = instance && instance.get({ plain: true });
             if (obj) {
                 this.mqttClient.publish(this.mqttTopicPrefix + msg.id, JSON.stringify({ cmd:'register_ack', errcode: 0, id: obj.id }), (err) => {
@@ -170,6 +172,9 @@ export default class WechatApi {
             // direct: LOCK->SERVICE, MQTT  
             // input: {cmd:'qrcode', id:'UUID', scene_id:'GENERATED_SCENE_ID', expire: TIME_IN_SECONDS}  
             // output: {errcode: 0, errmsg:'', qrcode:'GENERATED_QRCODE', expire: TIME_IN_SECONDS}  
+            var scene_id = Math.floor (Math.random()*100000);
+            var obj = {id: msg.id, scene_id: scene_id};
+            this.redis._redisClient.hmset('qrscene', scene_id.toString(), JSON.stringify(obj));
             var qrcode = await this.wechat.qrcode.createTmpQRCode (msg.scene_id, msg.expire);
             console.log ("get qrcode", qrcode);
             this.mqttClient.publish(this.mqttTopicPrefix + msg.id, JSON.stringify({ cmd: 'qrcode_ack', ...qrcode }), (err) => {
@@ -239,7 +244,19 @@ export default class WechatApi {
         ctx.body = lockCmd;
         console.log ("updateLock", lockCmd);
     }
+    async openLock (ctx, next) {
+        // direct: APP->SERVICE->LOCK  
+        // input: {id:'UUID', cmd:'open', ...OTHER_OPEN_DOOR_NEED_INFO}  
+        // output: {errcode: 0, errmsg:''}  
+        var id = ctx.request.query.id || ctx.request.body.id;
+        var lockCmd = await this._sendCmdToMqtt (this.mqttTopicPrefix+id, { ...ctx.request.body, cmd: 'open', id: id });
+        ctx.body = lockCmd;
+        console.log ("openLock", lockCmd);
+    }
     async _sendCmdToMqtt (topic, cmd, expire) {
+        if (typeof(expire) == "undefined" || expire == null || isNaN(expire))
+            expire = 30;
+
         // save cmd in LockCmd, and then send to mqtt.
         var instance = await models.LockCmd.create ({ cmd: JSON.stringify(cmd) });
         var obj = instance && instance.get({ plain: true });
@@ -250,7 +267,10 @@ export default class WechatApi {
                 console.log ("publish", err);
             });
             // return obj;
-            return await this._waitMqttResponse (obj.id, expire);
+            if ( expire <= 0) {
+                return { errcode: 1, errmsg: 'LockCmd in queue!' }
+            } else
+                return await this._waitMqttResponse (obj.id, expire);
         } else {
             console.log ("LockCmd insert fail!");
             return { errcode: -1, errmsg: 'insert LockCmd fail!' };

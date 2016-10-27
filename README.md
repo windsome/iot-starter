@@ -193,26 +193,33 @@ ln -s ../init.d/node-forever K23node
     input: {id:'UUID', cmd:'get_config'}  
     output: {errcode: 0, errmsg:'', cmd_id: 'ID_IN_LOCK_CMD',id:'', ca1:'', ca2:'', ca3:'',software_version:'1.1.1',hardware_version:'1.0.1',mac:'MAC', ...OTHER_CONFIG}  
     注意：此命令的处理是异步的，我们也可以等待，但有可能导致http超时  
-✔10.2, MQTT publish
-10.3, MQTT cmd_ack
+✔10.2, MQTT publish  
+10.3, MQTT cmd_ack  
 ✔11.1-3, API: /apis/lock/update, 升级锁软件(类似password)[管理员功能]  
     direct: APP->SERVICE->LOCK  
     input: {id:'UUID', cmd:'update', url:'https://......'}  
     output: {errcode: 0, errmsg:'', cmd_id: 'ID_IN_LOCK_CMD'}  
     注意：此命令的处理是异步的，我们也可以等待，但有可能导致http超时  
-✔11.2, MQTT publish
-11.3, MQTT cmd_ack
+✔11.2, MQTT publish  
+11.3, MQTT cmd_ack  
 ✔12.1-3, API: /apis/lock/get_password_list, 获取锁的密码列表(类似password)[管理员功能]  
     direct: APP->SERVICE->LOCK  
     input: {id:'UUID', cmd:'update', url:'https://......'}  
     output: {errcode: 0, errmsg:'', cmd_id: 'ID_IN_LOCK_CMD'}  
     注意：此命令的处理是异步的，我们也可以等待，但有可能导致http超时  
-✔12.2, MQTT publish
-12.3, MQTT cmd_ack
-✔13, API: /apis/lock/get_lock_list, 获取锁列表
-    direct: APP->SERVICE
+✔12.2, MQTT publish  
+12.3, MQTT cmd_ack  
+✔13, API: /apis/lock/get_lock_list, 获取锁列表  
+    direct: APP->SERVICE  
     input: {id:'UUID', where:{}, offset:0, limit:10}  
     output: {errcode: 0, errmsg:'', data:[{LOCK-INFO-IN-DB},{LOCK-INFO-IN-DB}]}  
+✔14.1-3, API: /apis/lock/open, 开门  
+    direct: APP->SERVICE->LOCK  
+    input: {id:'UUID', cmd:'open', ...OTHER_OPEN_DOOR_NEED_INFO}  
+    output: {errcode: 0, errmsg:''}  
+    注意：此命令的处理是异步的，我们也可以等待，但有可能导致http超时  
+14.2, MQTT publish  
+14.3, MQTT cmd_ack  
 ```
 ## API模拟测试（send_scene_id, password, config, reset）
 ```
@@ -257,6 +264,13 @@ mosquitto_pub -t /broker/smartlock1/server --cafile /download/ca.crt -h mqtt.lan
 mosquitto_pub -t /broker/smartlock1/server --cafile /download/ca.crt -h mqtt.lancertech.net -p 8883 -m '{"cmd":"log","id":"1","log":[{"action":"open", "time":12342},{"action":"close","time":12345}]}'
 * 锁获取qrcode
 mosquitto_pub -t /broker/smartlock1/server --cafile /download/ca.crt -h mqtt.lancertech.net -p 8883 -m '{"cmd":"qrcode","id":"1","scene_id":12345,"expire": 600}'
+
+LOCK接收消息测试：
+* 锁注册响应register_ack
+mosquitto_pub -t /broker/smartlock1/1 --cafile /download/ca.crt -h mqtt.lancertech.net -p 8883 -m '{"cmd":"register_ack","id":"1"}'
+* 锁心跳响应heartbeat_ack
+mosquitto_pub -t /broker/smartlock1/1 --cafile /download/ca.crt -h mqtt.lancertech.net -p 8883 -m '{"cmd":"heartbeat_ack","time":"11111111"}'
+
 ```
 ## 门锁超级用户管理系统
 ```
