@@ -151,7 +151,7 @@ export default class WechatApi {
             // output: {errcode: 0, errmsg:'', time:timestamp}  
             var timestamp = Math.round(new Date().getTime()/1000);
             this.mqttClient.publish(this.mqttTopicPrefix + msg.id, JSON.stringify({ cmd:'heartbeat_ack', errcode: 0, time: timestamp }), (err) => {
-                console.log ("publish", err);
+                //console.log ("publish", err);
             });
             break;
         case 'log':
@@ -178,7 +178,7 @@ export default class WechatApi {
             var qrcode = await this.wechat.qrcode.createTmpQRCode (scene_id, msg.expire);
             console.log ("get qrcode", qrcode);
             this.mqttClient.publish(this.mqttTopicPrefix + msg.id, JSON.stringify({ cmd: 'qrcode_ack', ...qrcode }), (err) => {
-                console.log ("publish", err);
+                //console.log ("publish", err);
             });
             break;
         case 'cmd_ack':
@@ -264,7 +264,7 @@ export default class WechatApi {
             // insert into LockCmd table for async cmd temp storage.
             // wait for cmd ack to remove item in LockCmd.
             this.mqttClient.publish(topic, JSON.stringify({ cmd_id: obj.id, ...cmd }), (err) => {
-                console.log ("publish", err);
+                //console.log ("publish", err);
             });
             // return obj;
             if ( expire <= 0) {
