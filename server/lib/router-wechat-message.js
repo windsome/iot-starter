@@ -18,9 +18,53 @@ var wechat = require('./wechat/wechat');
 var apis = null;
 var redis = null;
 
+const done = function (err, res) {
+    if (err) return reject(err);
+    if (arguments.length > 2) res = slice.call(arguments, 1);
+    resolve(res);
+}
+
+const redis_fn = function (fn, arg) {
+    if (arguments.length > 2) arg = slice.call(arguments, 1);
+    
+    return new Promise(function (resolve, reject) {
+        fn.call (arg, function (err, res) {
+            if (err) return reject(err);
+            if (arguments.length > 2) res = slice.call(arguments, 1);
+            resolve(res);
+        });
+    });
+}
+
+const redis_hget = function (hkey, key) {
+    return new Promise(function (resolve, reject) {
+        redis._redisClient.hget (hkey, key, function (err, res) {
+            if (err) return reject(err);
+            if (arguments.length > 2) res = slice.call(arguments, 1);
+            resolve(res);
+        });
+    });
+}
+
+async function doEventScene2 (qrscene) {
+    if (apis && redis) {
+        var scene_value = await redis_fn(redis._redisClient.hget, 'qrscene',qrscene);
+        if (scene_value) {
+            var obj = JSON.parse (scene_value);
+            console.log ('get qrscene', obj);
+            if (apis) {
+                var lockCmd = await apis._sendCmdToMqtt (apis.mqttTopicPrefix+obj.id, { cmd: 'open', id: obj.id }, 0);
+            }
+            var scene_value = await redis_fn(redis._redisClient.del, 'qrscene',qrscene);
+            return true;
+        }
+    }
+    return false;
+}
+
 async function doEventScene (ctx, qrscene) {
     if (apis && redis) {
-        redis._redisClient.hgetall ('qrscene',async function(err,res){
+        redis._redisClient.hget ('qrscene',qrscene,async function(err,res){
             if (err) {
                 console.log('Error:'+ err);
                 ctx.body='error';
@@ -34,7 +78,7 @@ async function doEventScene (ctx, qrscene) {
                 var lockCmd = await apis._sendCmdToMqtt (apis.mqttTopicPrefix+obj.id, { cmd: 'open', id: obj.id }, 0);
                 redis._redisClient.del ('qrscene',qrscene.toString());
                 ctx.body='success';
-                return;
+                return true;
             }
             ctx.body='error';
             return;
@@ -56,13 +100,19 @@ async function processMessage(ctx, next) {
                 // get qrcode, scene_id
                 var qrscene = message.EventKey.substr(message.EventKey.indexOf('qrscene_'), 'qrscene_'.length);
                 debug ("get scene_id:"+ qrscene);
-                return await doEventScene(ctx, qrscene);
+                var ret = await doEventScene2(qrscene);
+                if (ret) ctx.body = 'success'
+                else ctx.body='fail';
+                return;
             }
         }
         case 'scan': {
             var qrscene = message.EventKey;
             debug ("get scene_id:"+ qrscene);
-            return await doEventScene(ctx, qrscene);
+            var ret = await doEventScene2(qrscene);
+            if (ret) ctx.body = 'success'
+            else ctx.body='fail';
+            return;
         }
         default:
             break;
