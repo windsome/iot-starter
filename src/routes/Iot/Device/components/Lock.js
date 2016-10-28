@@ -12,14 +12,14 @@ export class Lock extends Component {
     }
     componentWillUnmount () {
         var { deinit, stopHeartBeat } = this.props;
+        //stopHeartBeat && stopHeartBeat();
         deinit && deinit ();
-        stopHeartBeat && stopHeartBeat();
     }
     render () {
         var { simulator, emit2Server, emitRegister } = this.props;
         var id = simulator && simulator.config && simulator.config.id;
         var qrcode = simulator && simulator.config && simulator.config.qrcode;
-        var cache = simulator && simulator.cache && simulator.cache.slice(0);
+        var cache = simulator && simulator.cache && simulator.cache.slice(-20);
         cache && cache.reverse();
         return (
 <div>

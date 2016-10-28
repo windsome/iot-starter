@@ -93,7 +93,8 @@ export const init = (id) => {
     }
 }
 
-export const deinit = () => {
+export const deinit = () => (dispatch) => {
+    dispatch (clearIntervalId());
     if (mqttClient) {
         mqttClient.end ();
         mqttClient = null;
