@@ -386,6 +386,36 @@ export default reduxForm({
 ```
 *重要问题，我始终没弄明白redux-form例子“Initialize From State”并没有设置该属性却表现正常能够动态改变初始值，为什么它可以？
 
+## 使用node-redis时，默认是使用callback的异步模式，怎么改成async/await模式？
+```
+1, callback模式：
+    redis._redisClient.hget ([hkey], [key], function(err,res){
+        if (err) {
+            console.log('Error:'+ err);
+            return;
+        }
+        console.dir(res);
+    });
+
+    redis._redisClient.del ([hkey],key);
+    这种模式查询或处理结果从异步的callback返回，对于koa2的服务器来说编程很困难。
+2, async/await模式，写一个通用的用来处理redis方法的函数，并调用此函数返回一个Promise，特别适合koa2
+const redis_fn = function (fn, arg) {
+    if (arguments.length > 2) arg = Array.prototype.slice.call(arguments, 1);
+    return new Promise(function (resolve, reject) {
+        fn.apply (redis._redisClient, arg.concat( function (err, res) {
+            console.log ("redis_fn result", err, res);
+            if (err) return reject(err);
+            if (arguments.length > 2) res = slice.call(arguments, 1);
+            resolve(res);
+        }));
+    });
+}
+用法：
+    var scene_value = await redis_fn(redis._redisClient.hget, 'qrscene',qrscene);
+    console.log ("scene_value", scene_value);
+    await redis_fn(redis._redisClient.del, 'qrscene',qrscene);
+```
 ## 攻击破解锁系统
 1,假冒锁，获取锁中的ca证书及锁uuid，用程序模仿锁，获得相关数据  
 2,攻击锁服务器  

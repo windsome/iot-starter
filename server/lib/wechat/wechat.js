@@ -3,6 +3,7 @@ import xml2js from 'xml2js';
 var crypto = require('crypto');
 var ejs = require('ejs');
 var WXBizMsgCrypt = require('wechat-crypto');
+var _todbg = false;
 
 var wechat = function (config) {
   if (!(this instanceof wechat)) {
@@ -311,14 +312,18 @@ wechat.prototype.middleware = function (handle) {
   };
 };
 
+let aaaa = 0;
 wechat.prototype.middleware2 = function (handle) {
   var that = this;
   if (this.encodingAESKey) {
     that.cryptor = new WXBizMsgCrypt(this.token, this.encodingAESKey, this.appid);
   }
   return async function (ctx, next) {
-      var step1 = Math.round(new Date().getTime()/1000);
-      console.log ("step1 time ", step1);
+      if (_todbg) {
+          var step1 = Math.round(new Date().getTime()/1000);
+          aaaa++;
+          console.log (aaaa, " step1 time ", step1);
+      }
     var query = ctx.query;
     // 加密模式
     var encrypted = !!(query.encrypt_type && query.encrypt_type === 'aes' && query.msg_signature);
@@ -389,11 +394,23 @@ wechat.prototype.middleware2 = function (handle) {
 
       // 挂载处理后的微信消息
       ctx.weixin = formated;
+      if (_todbg) {
         var step2 = Math.round(new Date().getTime()/1000);
-        console.log ("step2 time ", step2, " elapsed ", (step2-step1));
-        await handle(ctx, next);
+        console.log (aaaa, " step2 time ", step2, " elapsed ", (step2-step1));
+      }
+        try {
+        await handle(ctx);
+        }catch (e) {
+            console.log ("handle message fail, ", e.message);
+      if (_todbg) {
+        var stepX = Math.round(new Date().getTime()/1000);
+        console.log (aaaa, " stepX time ", stepX, " elapsed ", (stepX-step1), " body:", ctx.body, " error ", e.message);
+      }
+        }
+      if (_todbg) {
         var step3 = Math.round(new Date().getTime()/1000);
-        console.log ("step3 time ", step3, " elapsed ", (step3-step1));
+        console.log (aaaa, " step3 time ", step3, " elapsed ", (step3-step1), " body:", ctx.body);
+      }
 /*
       // 取session数据
       if (ctx.sessionStore) {
@@ -446,8 +463,10 @@ wechat.prototype.middleware2 = function (handle) {
       ctx.status = 501;
       ctx.body = 'Not Implemented';
     }
+      if (_todbg) {
       var step4 = Math.round(new Date().getTime()/1000);
-      console.log ("step4 time ", step4, " elapsed ", (step4-step1), " body:", ctx.body);
+      console.log (aaaa, " step4 time ", step4, " elapsed ", (step4-step1), " body:", ctx.body);
+      }
   };
 };
 

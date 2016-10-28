@@ -138,7 +138,7 @@ export default class WechatApi {
             var obj = instance && instance.get({ plain: true });
             if (obj) {
                 this.mqttClient.publish(this.mqttTopicPrefix + msg.id, JSON.stringify({ cmd:'register_ack', errcode: 0, id: obj.id }), (err) => {
-                    console.log ("publish", err);
+                    //console.log ("publish", err);
                 });
             } else {
                 console.log ("insert lock fail!");

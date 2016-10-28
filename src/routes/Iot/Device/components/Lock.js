@@ -8,7 +8,7 @@ export class Lock extends Component {
         var { init, simulator, startHeartBeat, stopHeartBeat } = this.props;
         var id = simulator && simulator.config && simulator.config.id;
         init && init (id);
-        startHeartBeat && startHeartBeat (id, 5000);
+        startHeartBeat && startHeartBeat (id, 20000);
     }
     componentWillUnmount () {
         var { deinit, stopHeartBeat } = this.props;

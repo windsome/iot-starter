@@ -18,40 +18,26 @@ var wechat = require('./wechat/wechat');
 var apis = null;
 var redis = null;
 
-const done = function (err, res) {
-    if (err) return reject(err);
-    if (arguments.length > 2) res = slice.call(arguments, 1);
-    resolve(res);
-}
-
 const redis_fn = function (fn, arg) {
-    if (arguments.length > 2) arg = slice.call(arguments, 1);
-    
+    if (arguments.length > 2) arg = Array.prototype.slice.call(arguments, 1);
+    //debug ("arg", arg);
     return new Promise(function (resolve, reject) {
-        fn.call (arg, function (err, res) {
+        fn.apply (redis._redisClient, arg.concat( function (err, res) {
+            //debug ("redis_fn result", err, res);
             if (err) return reject(err);
             if (arguments.length > 2) res = slice.call(arguments, 1);
             resolve(res);
-        });
-    });
-}
-
-const redis_hget = function (hkey, key) {
-    return new Promise(function (resolve, reject) {
-        redis._redisClient.hget (hkey, key, function (err, res) {
-            if (err) return reject(err);
-            if (arguments.length > 2) res = slice.call(arguments, 1);
-            resolve(res);
-        });
+        }));
     });
 }
 
 async function doEventScene2 (qrscene) {
     if (apis && redis) {
         var scene_value = await redis_fn(redis._redisClient.hget, 'qrscene',qrscene);
+        //debug ("scene_value", scene_value);
         if (scene_value) {
             var obj = JSON.parse (scene_value);
-            console.log ('get qrscene', obj);
+            //console.log ('get qrscene', obj);
             if (apis) {
                 var lockCmd = await apis._sendCmdToMqtt (apis.mqttTopicPrefix+obj.id, { cmd: 'open', id: obj.id }, 0);
             }
@@ -62,31 +48,7 @@ async function doEventScene2 (qrscene) {
     return false;
 }
 
-async function doEventScene (ctx, qrscene) {
-    if (apis && redis) {
-        redis._redisClient.hget ('qrscene',qrscene,async function(err,res){
-            if (err) {
-                console.log('Error:'+ err);
-                ctx.body='error';
-                return;
-            }
-            console.dir(res);
-            var scene_value = res[qrscene];
-            if (scene_value) {
-                var obj = JSON.parse (scene_value);
-                console.log ('get qrscene', obj);
-                var lockCmd = await apis._sendCmdToMqtt (apis.mqttTopicPrefix+obj.id, { cmd: 'open', id: obj.id }, 0);
-                redis._redisClient.del ('qrscene',qrscene.toString());
-                ctx.body='success';
-                return true;
-            }
-            ctx.body='error';
-            return;
-        });
-    }
-}
-
-async function processMessage(ctx, next) {
+async function processMessage(ctx) {
     // 微信输入信息都在this.weixin上
     var message = ctx.weixin;
     console.log ("windsome processMessage", message);
@@ -110,6 +72,7 @@ async function processMessage(ctx, next) {
             var qrscene = message.EventKey;
             debug ("get scene_id:"+ qrscene);
             var ret = await doEventScene2(qrscene);
+            //debug ("doEventScene2 ret:", ret);
             if (ret) ctx.body = 'success'
             else ctx.body='fail';
             return;
