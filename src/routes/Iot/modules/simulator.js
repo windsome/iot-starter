@@ -54,6 +54,10 @@ const parseMessage = (message) => {
     case 'reset':
         config.passwords = [];
         break;
+    case 'open':
+        console.log ("need Open Door!");
+        if (mqttClient) mqttClient.publish(mqttTopicPrefix + 'server', JSON.stringify({ cmd:"cmd_ack", errcode:0, cmd_id: obj.cmd_id}) );
+        break;
         
     case 'get_config':
     case 'log':
