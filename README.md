@@ -416,6 +416,18 @@ const redis_fn = function (fn, arg) {
     console.log ("scene_value", scene_value);
     await redis_fn(redis._redisClient.del, 'qrscene',qrscene);
 ```
+参考：
+[thunkify和co的结合](http://www.cnblogs.com/wofeiwofei/p/5462387.html)  
+[JavaScript里function函数实现可变参数(多态）](http://www.oschina.net/question/54100_15938)  
+## html编辑页面控件相关
+[relax](http://demo.getrelax.io/admin)  
+[tsurupin](http://staging.tsurupin.com/cms/posts/1/edit)  
+## react-redux-nodejs-koa 授权相关
+[react中添加授权](https://auth0.com/blog/adding-authentication-to-your-react-flux-app/)  
+[授权](https://scotch.io/tutorials/build-a-react-flux-app-with-user-authentication)  
+## 微信填坑
+1, pushState不支持问题，因Android6.2以下浏览器版本低的原因， [Android6.2以下浏览器版本低](http://www.jianshu.com/p/c4f216b0c080)  
+2, invalid signature问题，可能是时间戳基准不一样 [第三方后台时间与微信服务器时间](http://m.blog.csdn.net/article/details?id=49451359)  
 ## 攻击破解锁系统
 1,假冒锁，获取锁中的ca证书及锁uuid，用程序模仿锁，获得相关数据  
 2,攻击锁服务器  
