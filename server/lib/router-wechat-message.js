@@ -13,7 +13,7 @@ import _debug from 'debug'
 const debug = _debug('app:server:wechat')
 
 import convert from 'koa-convert'
-var wechat = require('co-wechat');
+var wechat = require('./wechat/wechat');
 
 var apis = null;
 var redis = null;
