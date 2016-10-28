@@ -51,7 +51,7 @@ async function doEventScene2 (qrscene) {
 async function processMessage(ctx) {
     // 微信输入信息都在this.weixin上
     var message = ctx.weixin;
-    console.log ("windsome processMessage", message);
+    debug ("windsome processMessage", message);
 
     switch (message.MsgType) {
     case 'event': {

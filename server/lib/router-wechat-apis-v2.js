@@ -111,7 +111,7 @@ export default class WechatApi {
         // Process Message published by Lock or App. 
         // ***currently, only Lock publish messages.
         // Lock ---publish---> Service
-        console.log("message", topic, message.toString())
+        debug ("message", topic, message.toString())
         var msg = {}; 
         try {
             var msgstr = message.toString();
