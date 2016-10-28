@@ -317,6 +317,8 @@ wechat.prototype.middleware2 = function (handle) {
     that.cryptor = new WXBizMsgCrypt(this.token, this.encodingAESKey, this.appid);
   }
   return async function (ctx, next) {
+      var step1 = Math.round(new Date().getTime()/1000);
+      console.log ("step1 time ", step1);
     var query = ctx.query;
     // 加密模式
     var encrypted = !!(query.encrypt_type && query.encrypt_type === 'aes' && query.msg_signature);
@@ -387,7 +389,11 @@ wechat.prototype.middleware2 = function (handle) {
 
       // 挂载处理后的微信消息
       ctx.weixin = formated;
+        var step2 = Math.round(new Date().getTime()/1000);
+        console.log ("step2 time ", step2, " elapsed ", (step2-step1));
         await handle(ctx, next);
+        var step3 = Math.round(new Date().getTime()/1000);
+        console.log ("step3 time ", step3, " elapsed ", (step3-step1));
 /*
       // 取session数据
       if (ctx.sessionStore) {
@@ -440,6 +446,8 @@ wechat.prototype.middleware2 = function (handle) {
       ctx.status = 501;
       ctx.body = 'Not Implemented';
     }
+      var step4 = Math.round(new Date().getTime()/1000);
+      console.log ("step4 time ", step4, " elapsed ", (step4-step1), " body:", ctx.body);
   };
 };
 

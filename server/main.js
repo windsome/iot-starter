@@ -22,9 +22,10 @@ const app = new Koa()
 var session = require('koa-generic-session');
 var RedisStore = require('koa-redis');
 var rstore = new RedisStore();
-rstore._redisClient.flushdb( function (err, succeeded) {
-    console.log("clear redis database ", succeeded); // will be true if successfull
-});
+rstore._redisClient.del('qrscene');
+//rstore._redisClient.flushdb( function (err, succeeded) {
+//    console.log("clear redis database ", succeeded); // will be true if successfull
+//});
 
 app.keys = ['keys', 'keykeys'];
 app.use(convert(session({

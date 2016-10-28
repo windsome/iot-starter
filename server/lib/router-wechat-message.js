@@ -32,6 +32,7 @@ async function doEventScene (ctx, qrscene) {
                 var obj = JSON.parse (scene_value);
                 console.log ('get qrscene', obj);
                 var lockCmd = await apis._sendCmdToMqtt (apis.mqttTopicPrefix+obj.id, { cmd: 'open', id: obj.id });
+                redis._redisClient.del ('qrscene',qrscene.toString());
                 ctx.body='success';
                 return;
             }
