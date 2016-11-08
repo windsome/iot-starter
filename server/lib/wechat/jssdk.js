@@ -18,7 +18,8 @@ export default class WechatJssdk {
         if (this.base.debug) {
             console.log ("where store data?");
         }
-        var jsApiTicket = this._getJsApiTicket();
+        var jsApiTicket = await this._getJsApiTicket();
+        debug ("jsApiTicket", jsApiTicket);
         var currentTimestamp = parseInt(new Date().getTime() / 1000) + '';
 
         var raw = function (args) {
@@ -81,7 +82,7 @@ export default class WechatJssdk {
                 console.log ("_getJsApiTicket: request fail! url="+url);
             }
         }
-        return cachedTicket.jsapi_ticket;
+        return cachedTicket.ticket;
     }
 
 }

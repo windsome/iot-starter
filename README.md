@@ -52,11 +52,6 @@ ln -s ../init.d/node-forever K23node
 
 # 作为双向https服务器
 
-# 动态加载css/js到页面
-公司网站需要使用bootstrap.css，而公众号页面需要weui.css，我们不能将其写在index.html中，需要动态加载  
-[dynamic load javascript/css 1](http://www.javascriptkit.com/javatutors/loadjavascriptcss.shtml)  
-[dynamic load javascript/css 2](http://www.javascriptkit.com/javatutors/loadjavascriptcss2.shtml)    
- 
 # API列表
 ## 门锁后台服务相关 service-lock
 ```
@@ -291,10 +286,136 @@ mosquitto_pub -t /broker/smartlock1/1 --cafile /download/ca.crt -h mqtt.lancerte
 2, 设备详情页面，最上面为设备详细信息，下面为功能按钮（得到密码列表，重置所有密码，设置密码，升级，读取日志），下面为命令返回的内容
 3, 是否需要批量功能？
 ```
-## 普通用户开锁子系统
-### 通过公众号页面扫描开锁
+## 用户发布房间信息，订房，开门子系统流程
 ### 通过微信扫一扫开锁
+如果用户还未关注公众号，则用户可以关注公众号，关注后微信会将带场景值关注事件推送给开发者。此时，第三方后台收到微信发来的xml消息，转成json为{MsgType:'event', Event:'subscribe',EventKey:'qrscene_123123'}。
+如果用户已经关注公众号，则微信会将带场景值扫描事件推送给开发者。此时，第三方后台收到微信发来的xml消息，转成json为{MsgType:'event',Event:'SCAN',EventKey:'SCENE_VALUE'}。
+第三方后台收到微信消息，解析并处理场景二维码，返回文字信息或图文消息（是否可以返回LINK页面？）到用户公众号页面。该消息大体描述了开门结果，有权限开门或无权限开门，点击图文消息进入详情页面，可以根据指导申请开门权限。
+该详情页面是房间的详细描述，包含已预订时间段等信息。（延时退房等情况怎么设计？）
+### 通过公众号页面扫描场景二维码开锁（是否需要？）
+公众号菜单中有一项，扫描开门，点击后进入扫描界面，将扫描后的内容不经过微信直接发送到第三方后台。
 ### 通过输入密码开锁 （不需与服务器联系，不需使用手机）
+### 用户通过微信公众号发布房间信息
+点击菜单发布房间，进入发布房间的页面，引导用户扫描锁的二维码，如果有大门锁，则将大门锁与该锁也关联，即用户订房时将同时有两把锁的权限。在设计上可以用大房间套小房间的概念，用户创建房间后，允许创造该房间下面的小房间。
+房间描述中，1,扫描锁背后二维码，2,最多8张图片，3,选择房间具有的设施：淋浴，浴缸，马桶，蹲便器，空调，IPTV电视，有线电视，有线网口，无线网络，吹风机，床，干净被褥，毛巾，浴巾，4,其他推广信息
+### 用户订房流程
+点击菜单我要订房，选择订房时间及地点，搜索出满足条件的房间信息，用户选择一个进入详情，点击订房，订下房间，返回订房成功信息，短信通知用户房间密码等信息
+1, 点击“我要订房”菜单，进入房间搜索页面，页面元素有：目的地点，起止时间（默认入住开始时间为14点，退房时间中午12点，中间预留两个小时用作清理和缓冲，特殊时段用房，用户可以自己选择时间段），搜索按钮。
+2, 在所有用户操作页面，头部有一个用户个人信息条（在用户浏览全过程中存在），包含元素有本人头像（点击进入个人详细信息），搜索框（点击进入搜索页面）。个人详细信息包含，个人资料，订单管理，房间管理，评价管理等。
+3, 用户点击搜索后，进入列表页面，类似自如，列表列出基本信息及图片，超过一天的列出日均价格，不超过6小时的列出每小时价格。上拉到头刷新，下拉到尾加载下一页。
+4, 点击某一项后，进入房间详细介绍页面。页首是图片轮转，下面是房间配备的设备列表，然后是价格栏及预订按钮、收藏按钮，接下来是房东信息，评价分数，文字描述，注意事项，评价信息等
+5, 点击预订后，进入支付流程。首先支付确认，支付完成或失败，返回已完成订单或未完成订单列表。
+### 语音订房流程
+在公众号页面输入语音，自动识别出地点和时间，进入相应搜索页面
+### 用户发布房间流程
+1,点击“发布房间”菜单，进入房间发布页面，分为多个步骤发布
+    a）房源类型、几张床（默认1）、最多允许几个人住（默认2）、几个卫生间（默认1）。至于床多大，在详细描述中可以写，具体情况照片中可以看出来
+    b）房源位置（由地图确定，默认停在当前GPS位置）、门牌号（由输入框描述）
+    c）是否使用微信锁（扫描微信锁二维码，微信屏幕工程模式可以调出锁的设备二维码），如果有多把微信锁，则添加锁。
+    d）上传8张照片，至少1张，可以以后再增删。
+    e）设置一个精彩的标题，选择一堆标签，一段房间描述（位置，禁忌）
+    f）设置日历，将某些日子设为不出租。入住时间，退房时间
+    g）预览及发布
+    注意：如果发布不存在的房间，被发现后一个月内不能发布信息
+2,点击“我的自助”菜单（或者有子菜单：我的发布，我的预订，我的收藏），能查看自己发布的房间及自己预订的房间。
+## 订房系统超级用户管理子系统
+### 用户信息管理（微信用户管理）
+### 房间信息管理（包含锁管理）
+## 用户发布及订房APP对应的数据库
+1, 用户相关表
+用户基础信息表user{id, password, name, email, telephone, openid, birth, location, desc, avatar[pictureId], createAt, updateAt}
+
+2, 房间信息表
+房间信息表room{id, [ownerId], rentType{时租房HOUR，日租房DAY，月租房MONTH}, priceHour, priceDay, priceMonth, [currencyId], title, address, gpsLatitude, gpsLongitude, peopleCount, washRoom, bedRoom, bedCount, checkIn, checkOut, [roomTypeId], headPicture}
+房间图片表roomPicture{id, [roomId], [pictureId]}
+房间锁列表roomLock{id, [roomId], [LockId]}
+房间类型表roomType{id, name{公寓，整套房子}}
+货币种类表currency{id, desc{￥, $}, type{AED,ARS,AUD,BGN,BRL,CAD,CHF,CLP,CNY,COP,CRC,CZK,DKK,EUR,GBP,HKD,HRK,HUF,IDR,ILS,JPY,KRW,MAD,MXN,MYR,NOK,NZD,PEN,PHP,PLN,RON,RUB,SAR,SEK,SGD,THB,TRY,TWD,UAH,USD,UYU,VND,ZAR}}
+收藏房间表 FaverRoom {id, [userId], [roomId], createAt, updateAt}
+预订表 booking {id, [userId], [roomId], startTime, endTime, status, [payId], createAt, updateAt}
+资金流水表 payment{id, [userId], payTime, money, status, createAt, updateAt}
+3, 公共表
+图片表picture{id, path, name, desc, (origin, big, middle, small,? in cache?) createAt, updateAt}
+
+## 用户房间系统API列表
+1, 用户
+
+## airbnb发布房间过程
+房源类型：公寓,独立屋,宾馆,整层楼,住宿加早餐,公寓,小木屋,别墅,阁楼,连栋住宅,小平房,城堡,宿舍,树屋,船,飞机,露营车/房车,冰屋,灯塔,蒙古包,圆锥形帐篷,洞穴,岛屿,牧人小屋,土房,小屋,火车,帐篷,其它
+
+有几张床：1-16
+床类型：实体床,平拉式沙发,气垫床,日式床垫,沙发
+房间能住几位客人：1-16
+
+有几个卫生间 0, 0.5-8
+
+房源位于何处？
+国家列表：刚果,刚果民主共和国,马其顿,阿尔巴尼亚,阿尔及利亚,阿富汗,阿根廷,阿拉伯联合酋长国,阿鲁巴,阿曼,阿塞拜疆,埃及,埃塞俄比亚,爱尔兰,爱沙尼亚,安道尔,安哥拉,安圭拉,安提瓜和巴布达,奥地利,奥兰群岛,澳大利亚,澳门,巴巴多斯,巴布亚新几内亚,巴哈马,巴基斯坦,巴拉圭,巴勒斯坦领土,巴林,巴拿马,巴西,白俄罗斯,百慕大,保加利亚,北马里亚纳群岛,贝宁,比利时,冰岛,波多黎各,波兰,波斯尼亚和黑塞哥维那,玻利维亚,伯利兹,博茨瓦纳,不丹,布基纳法索,布隆迪,赤道几内亚,丹麦,德国,东帝汶,多哥,多米尼加,多米尼加共和国,俄罗斯,厄瓜多尔,厄立特里亚,法国,法罗群岛,法属波利尼西亚,法属圭亚那,法属圣马丁,梵蒂冈,菲律宾,斐济,芬兰,佛得角,福克兰群岛（马尔维纳斯群岛）,冈比亚,哥伦比亚,哥斯达黎加,格林纳达,格陵兰,格鲁吉亚,根西岛,古巴,瓜德罗普岛,关岛,圭亚那,哈萨克斯坦,海地,韩国,荷兰,荷兰加勒比,荷属圣马丁,黑山共和国,洪都拉斯,基里巴斯,吉布提,吉尔吉斯斯坦,几内亚,几内亚比绍,加拿大,加纳,加蓬,柬埔寨,捷克共和国,津巴布韦,喀麦隆,卡塔尔,开曼群岛,科科斯群岛,科摩罗,科威特,克罗地亚,肯尼亚,库克群岛,库拉索,拉脱维亚,莱索托,老挝,黎巴嫩,立陶宛,利比里亚,利比亚,列支敦士登,留尼汪,卢森堡,卢旺达,罗马尼亚,马达加斯加,马尔代夫,马耳他,马拉维,马来西亚,马里,马绍尔群岛,马提尼克,马约特,曼岛,毛里求斯,毛里塔尼亚,美国,美属萨摩亚,美属维京群岛,蒙古,蒙塞拉特,孟加拉国,秘鲁,密克罗尼西亚联邦,缅甸,摩尔多瓦,摩洛哥,摩纳哥,莫桑比克,墨西哥,纳米比亚,南非,南乔治亚岛和南桑威齐群岛,南苏丹,瑙鲁,尼加拉瓜,尼泊尔,尼日尔,尼日利亚,纽埃,挪威,诺福克岛,帕劳,皮特凯恩群岛,葡萄牙,日本,瑞典,瑞士,萨尔瓦多,萨摩亚,塞尔维亚,塞拉利昂,塞内加尔,塞浦路斯,塞舌尔,沙特阿拉伯,圣巴泰勒米,圣诞岛,圣多美和普林西比,圣赫勒拿,圣基茨和尼维斯,圣卢西亚,圣马力诺,圣皮埃尔和密克隆群岛,圣文森特和格林纳丁斯,斯里兰卡,斯洛伐克,斯洛文尼亚,斯瓦尔巴特和扬马延,斯威士兰,苏里南,所罗门群岛,索马里,塔吉克斯坦,台湾,泰国,坦桑尼亚,汤加,特克斯和凯科斯群岛,特立尼达和多巴哥,突尼西亞,图瓦卢,土耳其,土库曼斯坦,托克劳,瓦利斯和富图纳,瓦努阿图,危地马拉,委内瑞拉,文莱,乌干达,乌克兰,乌拉圭,乌兹别克斯坦,希腊,西班牙,西撒哈拉,香港,象牙海岸,新加坡,新喀里多尼亚,新西兰,匈牙利,牙买加,亚美尼亚,也门,伊拉克,以色列,意大利,印度,印度尼西亚,英国,英属维京群岛,英属印度洋领地,约旦,越南,赞比亚,泽西岛,乍得,直布罗陀,智利,中非共和国,中国
+地图位置： 建议直接拖拽地图，默认在当前位置
+门牌号：填写小区名及门牌号即可
+
+您提供的便利设施有哪些？
+生活必需品（毛巾、床单、香皂和卫生纸）,无线上网,洗发水,壁橱/抽屉,电视,暖气,空调,早餐、咖啡、茶,书桌/工作区,壁炉,熨斗,吹风机,屋內有宠物
+安全措施：烟雾报警器,一氧化碳报警器,急救包,安全卡,灭火器,卧室带锁
+
+房客可以使用哪些区域？厨房,洗衣机,干衣机,停车,电梯,游泳池,按摩浴缸,健身房,
+
+成为Airbnb房东
+床、浴室和便利设施等等 更改
+场景设置 照片、简短描述、标题
+准备好接待房客 预订设置、日历、价格
+
+我的房源靠近 。。。
+你会爱上我的房源，因为。。。（标签）
+我的房源适合： 情侣,独自旅行的冒险家,商务旅行者,有小孩的家庭,大型团体,毛茸茸的伙伴（宠物）
+生成一个文字描述，用于检索
+
+为您的房源起个名称
+
+查看Airbnb房客要求
+已确认邮箱，确认电话号码，个人头像，付款信息
+同意您的《房屋守则》，告诉您他们的旅程目的
+已向Airbnb提交政府颁发的身份证明，受到其他房东推荐，而且没有负面评价
+
+为房客制定《房屋守则》
+适合儿童入住（2-12岁） 
+适合婴幼儿入住（2岁以下） 
+适合宠物入住 
+允许吸烟 
+允许举办活动或聚会 
+添加更多守则：
+
+房客预订方式：即时预订
+只要房客符合以下条件，他们便可以即时预订可租日期：
+获得其他房东推荐，并且没有负面评价
+符合Airbnb的房客要求
+同意您的《房屋守则》
+告诉您他们的旅程目的
+告诉您同行人数
+不符合您的要求的房客必须发送预订申请。
+
+要求所有房客发送预订申请
+勾选方框以确认您已理解：
+对于所有预订申请，您都将需要在24小时内回复
+您的房源在搜索结果中显示的频率将会降低
+您可能只会获得一半数量的预订
+您知道吗？ 超过900,000的房东允许房客即时预订住宿，因为这样他们可以轻松获得两倍的预订。
+
+成功出租始于您的日历
+
+在房客抵达前，您需要提前多久收到通知？1,2,3,7
+
+房客可以提前多久预订？任何时候,3个月,6个月,一年,默认不开放的日期
+
+房客可以住多久？最少晚数，最多晚数
+
+更新您的日历
+
+您想如何设置房源价格？根据需求调整价格 固定价格 
+
+选择货币,AED,ARS,AUD,BGN,BRL,CAD,CHF,CLP,CNY,COP,CRC,CZK,DKK,EUR,GBP,HKD,HRK,HUF,IDR,ILS,JPY,KRW,MAD,MXN,MYR,NOK,NZD,PEN,PHP,PLN,RON,RUB,SAR,SEK,SGD,THB,TRY,TWD,UAH,USD,UYU,VND,ZAR
+
+## api列表
 ```
 功能：用户通过公众号页面扫描二维码， 
 × 锁列表及按条件查询（list_lock）
@@ -364,13 +485,13 @@ echo ' '
 241         debug ("{a} expire", expire, "!expire", !expire, "!!expire", !!expire, "!!!expire", !!!expire);
 结果：
   app:server:apis undefined expire +18s undefined !expire true !!expire false !!!expire true
-  app:server:apis null expire +0ms null !expire true !!expire false !!!expire true
-  app:server:apis 0 expire +0ms 0 !expire true !!expire false !!!expire true
-  app:server:apis "" expire +0ms  !expire true !!expire false !!!expire true
-  app:server:apis 1 expire +0ms 1 !expire false !!expire true !!!expire false
-  app:server:apis "11" expire +0ms 11 !expire false !!expire true !!!expire false
-  app:server:apis {} expire +0ms {} !expire false !!expire true !!!expire false
-  app:server:apis {a} expire +16ms { a: 'a' } !expire false !!expire true !!!expire false
+  app:server:apis null expire +0ms      null      !expire true !!expire false !!!expire true
+  app:server:apis 0 expire +0ms         0         !expire true !!expire false !!!expire true
+  app:server:apis "" expire +0ms                  !expire true !!expire false !!!expire true
+  app:server:apis 1 expire +0ms         1         !expire false !!expire true !!!expire false
+  app:server:apis "11" expire +0ms      11        !expire false !!expire true !!!expire false
+  app:server:apis {} expire +0ms        {}        !expire false !!expire true !!!expire false
+  app:server:apis {a} expire +16ms     { a: 'a' } !expire false !!expire true !!!expire false
 ```
 
 ## 比较好的markdown编辑器retext
@@ -422,12 +543,31 @@ const redis_fn = function (fn, arg) {
 ## html编辑页面控件相关
 [relax](http://demo.getrelax.io/admin)  
 [tsurupin](http://staging.tsurupin.com/cms/posts/1/edit)  
+## 下拉加载，上拉刷新
+[react + iscroll5 实现完美 下拉刷新，上拉加载](http://www.cnblogs.com/qq120848369/p/5920420.html)  
+## window.getComputedStyle()获取计算后的元素样式
+语法如下：
+var style = window.getComputedStyle("元素", "伪类");
+例如：
+var dom = document.getElementById("test"),
+    style = window.getComputedStyle(dom , ":after");
+
+## 动态加载css/js到页面
+公司网站需要使用bootstrap.css，而公众号页面需要weui.css，我们不能将其写在index.html中，需要动态加载  
+[dynamic load javascript/css 1](http://www.javascriptkit.com/javatutors/loadjavascriptcss.shtml)  
+[dynamic load javascript/css 2](http://www.javascriptkit.com/javatutors/loadjavascriptcss2.shtml)    
+[React中动态加载css文件](http://stackoverflow.com/questions/28386125/dynamically-load-a-stylesheet-with-react)  
 ## react-redux-nodejs-koa 授权相关
 [react中添加授权](https://auth0.com/blog/adding-authentication-to-your-react-flux-app/)  
 [授权](https://scotch.io/tutorials/build-a-react-flux-app-with-user-authentication)  
 ## 微信填坑
 1, pushState不支持问题，因Android6.2以下浏览器版本低的原因， [Android6.2以下浏览器版本低](http://www.jianshu.com/p/c4f216b0c080)  
 2, invalid signature问题，可能是时间戳基准不一样 [第三方后台时间与微信服务器时间](http://m.blog.csdn.net/article/details?id=49451359)  
+## emacs中以utf-8编码读取文件
+查看当前buffer的编码：M-x　describe-coding-system  
+按C-x <RET> r <TAB> 列出所有编码  
+以指定编码重读当前buffer：C-x <RET> r utf-8，(revert-buffer-with-coding-system)  
+改变当前buffer的编码：C-x <RET> f uft-8，(set-buffer-file-coding-system)  
 ## 攻击破解锁系统
 1,假冒锁，获取锁中的ca证书及锁uuid，用程序模仿锁，获得相关数据  
 2,攻击锁服务器  

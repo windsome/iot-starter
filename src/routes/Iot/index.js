@@ -1,5 +1,6 @@
 import DeviceRoute from './Device'
 import AdminRoute from './Admin'
+import AppRoute from './App'
 import { injectReducer } from '../../store/reducers';
 import signReducer, { fetchSign } from '../../store/lib/signPackage';
 
@@ -25,6 +26,7 @@ export default (store) => ({
   },
   childRoutes: [
     DeviceRoute(store),
-    AdminRoute (store)
+    AdminRoute (store),
+    AppRoute (store)
   ]
 })

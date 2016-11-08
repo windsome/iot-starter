@@ -212,7 +212,7 @@ webpackConfig.module.loaders.push({
     'postcss'
   ]
 })
-
+debug ("webpack.config", isUsingCSSModules, "regex", cssModulesRegex, "module", excludeCSSModules);
 // ------------------------------------
 // Style Configuration
 // ------------------------------------
