@@ -65,7 +65,7 @@ export default class WechatApi {
         router.all('/login', this.login);
         // oauth2
         router.all('/oauth2/get_state', this.oauth2GetState.bind(this));
-        router.all('/oauth2/get_user_info', this.oauth2GetUserInfo.bind(this));
+        router.all('/oauth2/login', this.oauth2Login.bind(this));
         // jsapi
         router.all('/jsapi/get_sign_package', this.getSignPackage.bind(this));
         // device
@@ -426,17 +426,89 @@ export default class WechatApi {
             // get oauth2 access_token from weixin
             var token = await this.wechat.jssdk.getOauthAccessToken (code);
             // combine all value, set code to -1 to invalid it.
-            var oauth2_next = { ...oauth2, code: -1, ...token };
-            
-            // get user info from weixin using access_token.
-            console.log ("windsome getUserInfo2", token);
-            ctx.session.oauth2 = oauth2_next;
-            ret = oauth2_next;
+            if (token && token.errcode) {
+                // get error, login fail!
+                ret = token;
+            } else {
+                var oauth2_next = { state: '', code: '' };
+                
+                // get user info from weixin using access_token.
+                console.log ("windsome getOauthAccessToken", token);
+                var userinfo = await this.wechat.user.getUserInfo (token.openid);
+                if (userinfo && userinfo.errcode) {
+                    console.log ("getUserInfo fail", userinfo);
+                } else {
+                    oauth2_next = { state: '', code: '', ...userinfo };
+                }
+                ret = userinfo;
+                ctx.session.oauth2 = oauth2_next;
+            }
         } else {
             console.log ("not found state in cache! a illege request!");
             ret = {errcode: -2, message: "illege request!" };
         }
         console.log ("windsome getUserInfo2", ret);
+        ctx.body = ret;
+    }
+
+    async oauth2Login (ctx, next){
+        var code = ctx.request.query.code || ctx.request.body.code;
+        var state = ctx.request.query.state || ctx.request.body.state;
+        var oauth2 = ctx.session.oauth2;
+        debug ("windsome getUserInfo1", code, state, "oauth2", oauth2);
+
+        var next_oauth2 = { state: '', code: '', authorized: false };
+        var ret = {};
+        // check whether state is in cache?
+        if (state && oauth2 && (state == oauth2.state)) {
+            // after handshake from wechat, already login!
+            // TODO: check whether state's ip is same as that in the cache?
+            // get oauth2 access_token from weixin
+            var token = await this.wechat.jssdk.getOauthAccessToken (code);
+            // combine all value, set code to -1 to invalid it.
+            if (!token || (token && token.errcode)) {
+                // login fail! get error!
+                debug ("getOauthAccessToken fail!", token);
+                ret = token;
+            } else {
+                // login ok! get user info from weixin using access_token.
+                console.log ("windsome getOauthAccessToken", token);
+
+                // check whether user register already?
+                var exist_user = null;
+                var instance = await models.User.findOne({ where: { openid: token.openid } });
+                if (instance) {
+                    exist_user = instance && instance.get({ plain: true });
+                }
+                if (!exist_user) {
+                    console.log ("user not exist, create to table USER");
+                    var instance2 = await models.User.create ({ openid: token.openid });
+                    var exist_user = instance2 && instance2.get({ plain: true });
+                    if (exist_user) {
+                        debug ("create new user ok! user=", exist_user.openid);
+                    }
+                }
+                if (exist_user) {
+                    // exactly login ok!
+                    next_oauth2 = { ...next_oauth2, authorized: true, id: exist_user.id };
+                    var userinfo = await this.wechat.user.getUserInfo (token.openid);
+                    if (!userinfo || (userinfo && userinfo.errcode)) {
+                        debug ("wechat getUserInfo fail", userinfo);
+                    } else {
+                        next_oauth2 = { ...next_oauth2, wechat: userinfo };
+                    }
+                    ret = { id: exist_user.id, authorized: true, wechat: userinfo };
+                } else {
+                    debug ('database fail! not find user!');
+                    ret = { errcode: -3, message: 'database fail! not find user!' };
+                }
+            }
+        } else {
+            debug ("not found state in cache! a illege request! ignore");
+            ret = { errcode: -2, message: "illege request! ignore" };
+        }
+        console.log ("windsome getUserInfo2", ret);
+        ctx.session.oauth2 = next_oauth2;
         ctx.body = ret;
     }
 

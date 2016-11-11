@@ -6,14 +6,14 @@ import EmptyLayout from '../layouts/EmptyLayout/EmptyLayout'
 import SampleRoute from './Sample'
 import IotRoute from './Iot'
 import AuthRoute from './Auth'
-import { fetchUser } from '../store/lib/oauth2'
+import { loginIfNeeded, doLogin } from '../store/lib/oauth2'
 
 export const createRoutes = (store) => ({
   path: '/',
   component: EmptyLayout,
   onEnter: function () {
       //injectReducer(store, { key:'sign', reducer:signReducer })
-      console.log ("windsome routes/",location.search, " query2: ", location.search.substring(1).split('&'));
+      /*console.log ("windsome routes/",location.search, " query2: ", location.search.substring(1).split('&'));
       var qsObj = {};
       var qs = location.search.substring(1);
       var qsArr = qs && qs.split('&');
@@ -25,8 +25,9 @@ export const createRoutes = (store) => ({
       if (qsObj.code && qsObj.state) {
           // has code & state.
           console.log ("qsObj", qsObj);
-          store.dispatch(fetchUser(qsObj));
-      }
+          store.dispatch(doLogin(qsObj));
+      }*/
+      store.dispatch(loginIfNeeded(location.search));
   },
   indexRoute: {
       onEnter: function (nextState, replace) {

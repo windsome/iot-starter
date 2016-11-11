@@ -76,11 +76,11 @@ export function userFailure (error) {
     }
 }
 
-export const fetchUser = (cfg) => {
+export const doLogin = (cfg) => {
     return (dispatch) => {
         dispatch(userRequest())
         
-        return fetch("/apis/jsapi/get_user_info", 
+        return fetch("/apis/oauth2/login", 
                      { method: 'POST',
                        headers: { 
                            "Content-Type": "application/json; charset=utf-8"
@@ -90,7 +90,7 @@ export const fetchUser = (cfg) => {
                        body: JSON.stringify({ code: cfg.code, state: cfg.state}) })
             .then(data => data.json())
             .then((retcode) => {
-                console.log ("fetchUser", retcode);
+                console.log ("doLogin", retcode);
                 dispatch(userSuccess(retcode))
             })
             .catch((error) => {
@@ -100,6 +100,36 @@ export const fetchUser = (cfg) => {
     }
 }
 
+function shouldLogin(state, location_search) {
+    var qsObj = {};
+    var qs = location_search.substring(1);
+    var qsArr = qs && qs.split('&');
+    for (var i = 0; i < qsArr.length; i++) {
+        var arr2 = qsArr[i].split('=');
+        var name = arr2[0];
+        qsObj[name] = arr2[1];
+    }
+    if (qsObj.code && qsObj.state) {
+        // has code & state.
+        console.log ("need login, qsObj=", qsObj);
+        return qsObj;
+        //store.dispatch(doLogin(qsObj));
+    }
+    return null;
+}
+
+export function loginIfNeeded(location_search) {
+    return (dispatch, getState) => {
+        var qs = shouldLogin (getState(), location_search);
+        if (qs) {
+            return dispatch(doLogin(qs))
+        //} else {
+        //    return dispatch (findLockSuccess({ data: lockId }));
+        }
+    }
+}
+
+
 export const actions = {
     oauth2Request,
     oauth2Success,
@@ -108,7 +138,7 @@ export const actions = {
     userRequest,
     userSuccess,
     userFailure,
-    fetchUser
+    doLogin
 }
 
 const OAUTH2_ACTION_HANDLERS = {

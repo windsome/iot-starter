@@ -7,10 +7,14 @@ export class LoginForm extends Component {
     componentDidMount () {
         console.log ("componentDidMount");
         //this.props.fetchDevices && this.props.fetchDevices (0, 10);
+        const { location } = this.props;
+        if (location && location.query && location.query.code && location.query.state) {
+            console.log ("need login: ", location.query);
+        }
     }
 
     render () {
-        const { handleSubmit, handleLogin, handleOauth2, pristine, reset, submitting, auth } = this.props;
+        const { handleSubmit, handleLogin, handleOauth2, pristine, reset, submitting, auth, oauth2 } = this.props;
         var props = this.props;
         console.log ("Auth/Login", this.props);
 
@@ -45,6 +49,7 @@ export class LoginForm extends Component {
       </div>
       <div> { token }
       </div>
+      <div> { JSON.stringify(oauth2.oauth2) } </div>
       
 <div>
   <div>

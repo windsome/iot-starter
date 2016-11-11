@@ -15,7 +15,8 @@ const mapStateToProps = (state) => ({
     zen: state.zen.zens.find(zen => zen.id === state.zen.current),
     saved: state.zen.zens.filter(zen => state.zen.saved.indexOf(zen.id) !== -1),
     sign: state.sign,
-    auth: state.auth
+    auth: state.auth,
+    oauth2: state.oauth2
 })
 
 export default connect(mapStateToProps, mapDispatchToProps)(LoginForm)

@@ -56,6 +56,7 @@ export default class WechatBase {
 
         var data;
         try {
+            debug ("request", url, opts, retry);
             var res = await fetch(url, opts || {} );
             data = await res.json();
         } catch (error) { 
@@ -68,16 +69,16 @@ export default class WechatBase {
 
         if (data && data.errcode) {
             // get error!
-            let err = new Error(data.errmsg);
-            err.name = 'WeChatAPIError';
-            err.code = data.errcode;
-            
             if (data.errcode === 40001 && retry > 0) {
                 // maybe access_token is timeout. update access_token, and retry!
                 await this.getAccessToken (true);
                 return await this.request(url, opts, retry-1);
             }
-            throw err;
+            //// need throw Error??
+            //let err = new Error(data.errmsg);
+            //err.name = 'WeChatAPIError';
+            //err.code = data.errcode;
+            //throw err;
         }
         return data;
     }

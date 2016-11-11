@@ -7,14 +7,20 @@ module.exports = function(sequelize, DataTypes) {
             defaultValue: DataTypes.UUIDV4,
             primaryKey: true
         },
-        openid: DataTypes.STRING,
-        info: DataTypes.TEXT
+        password: DataTypes.STRING,
+        name: DataTypes.STRING,
+        email: DataTypes.STRING,
+        telephone: DataTypes.STRING,
+        cardid: DataTypes.STRING,
+        addr: DataTypes.STRING,
+        desc: DataTypes.STRING,
+        avatar: DataTypes.STRING,
+        openid: DataTypes.STRING
     }, {
-        timestamps: false,
         classMethods: {
             associate: function(models) {
                 //User.hasMany(models.Lock);
-                User.belongsToMany(models.Lock, {through: 'UserLock', timestamps: false});
+                //User.belongsToMany(models.Lock, {through: 'UserLock', timestamps: false});
             }
         }
     });

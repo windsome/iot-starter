@@ -323,17 +323,19 @@ mosquitto_pub -t /broker/smartlock1/1 --cafile /download/ca.crt -h mqtt.lancerte
 ### 房间信息管理（包含锁管理）
 ## 用户发布及订房APP对应的数据库
 1, 用户相关表
-用户基础信息表user{id, password, name, email, telephone, openid, birth, location, desc, avatar[pictureId], createAt, updateAt}
-
+用户基础信息表user{id, password, name, email, telephone, cardid, addr, desc, avatar[pictureId], createAt, updateAt}
+微信用户信息表WechatUser {id, [userId], openid, subscribe, nickname, sex, language, city, province, country, headimgurl, subscribe_time, unionid, remark, groupid, tagid_list:[128,2]}
+用户标签表WechatUserTag(不是SQL数据库表)，直接从微信获取，保存在缓存数据库中，并且能动态更新，建议在解析某个用户的标签列表时发现有不匹配情况时，更新该用户信息和标签表信息，使其跟微信服务器一致。
 2, 房间信息表
-房间信息表room{id, [ownerId], rentType{时租房HOUR，日租房DAY，月租房MONTH}, priceHour, priceDay, priceMonth, [currencyId], title, address, gpsLatitude, gpsLongitude, peopleCount, washRoom, bedRoom, bedCount, checkIn, checkOut, [roomTypeId], headPicture}
-房间图片表roomPicture{id, [roomId], [pictureId]}
-房间锁列表roomLock{id, [roomId], [LockId]}
-房间类型表roomType{id, name{公寓，整套房子}}
-货币种类表currency{id, desc{￥, $}, type{AED,ARS,AUD,BGN,BRL,CAD,CHF,CLP,CNY,COP,CRC,CZK,DKK,EUR,GBP,HKD,HRK,HUF,IDR,ILS,JPY,KRW,MAD,MXN,MYR,NOK,NZD,PEN,PHP,PLN,RON,RUB,SAR,SEK,SGD,THB,TRY,TWD,UAH,USD,UYU,VND,ZAR}}
-收藏房间表 FaverRoom {id, [userId], [roomId], createAt, updateAt}
-预订表 booking {id, [userId], [roomId], startTime, endTime, status, [payId], createAt, updateAt}
-资金流水表 payment{id, [userId], payTime, money, status, createAt, updateAt}
+房间信息表room{id, [ownerId], rentType{时租房HOUR，日租房DAY，月租房MONTH}, priceHour, priceDay, priceMonth, [currencyId---], title, address, gpsLatitude, gpsLongitude, peopleCount, washRoom, bedRoom, bedCount, checkIn, checkOut, [roomTypeId---], [headimgId]}
+房间图片(多对多关系表)roomPicture{id, [roomId], [pictureId]}
+房间锁(多对多关系表)roomLock{id, [roomId], [LockId]}
+---房间类型表roomType(不是SQL数据库表，作为全局变量，暂时不要){id, name{公寓，整套房子......}}
+---货币种类表currency(不是SQL数据库表，作为全局变量，暂时不要){id, desc{￥, $}, type{AED,ARS,AUD,BGN,BRL,CAD,CHF,CLP,CNY,COP,CRC,CZK,DKK,EUR,GBP,HKD,HRK,HUF,IDR,ILS,JPY,KRW,MAD,MXN,MYR,NOK,NZD,PEN,PHP,PLN,RON,RUB,SAR,SEK,SGD,THB,TRY,TWD,UAH,USD,UYU,VND,ZAR}}
+收藏房间(多对多关系表) RoomFaver {id, [userId], [roomId], createAt, updateAt}
+预订表 booking {id, [userId], [roomId], startTime, endTime, status{init, payed, checkin, finish}, [paymentId], createAt, updateAt}
+评价表 Rating {id, [bookingId],[userId], accuracy,communication,cleanliness,location,checkin,value}
+资金流水表 payment{id, [userId], amount/money, status, finishTime, createAt, updateAt},除了订房的支付，所有支付都在这里有记录。
 3, 公共表
 图片表picture{id, path, name, desc, (origin, big, middle, small,? in cache?) createAt, updateAt}
 

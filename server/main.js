@@ -32,15 +32,10 @@ app.use(convert(session({
   store: rstore
 })));
 
-var contentType = require('content-type')
-var getRawBody = require('raw-body')
-app.use(convert(function * (next) {
-    //var rawText = yield getRawBody(this.req)
-    var rawText = "";
-    console.log ("["+this.req.method+"]["+this.req.url+"] "+rawText);
-    //this.request.body = JSON.parse(rawText);
-    yield next
-}))
+app.use(async (ctx, next) => {
+    console.log ("["+ctx.method+"] "+ctx.path+", query=", ctx.query);
+    await next();
+})
 
 var bodyParser = require('koa-bodyparser');
 app.use(convert(bodyParser()));
@@ -100,7 +95,7 @@ if (config.env === 'development') {
 
 app.use(function (ctx, next) {
     var rawText = "";
-    console.log ("not done! ["+ctx.req.method+"]["+ctx.req.url+"] "+rawText);
+    console.log ("not done! ["+ctx.req.method+"]["+ctx.path+"]["+ctx.req.url+"] ");
     //this.request.body = JSON.parse(rawText);
 })
 
