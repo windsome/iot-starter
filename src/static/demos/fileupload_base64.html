@@ -25,6 +25,7 @@ Uploader.prototype = {
      */
     headers : {},
     imgdatas: {},
+    mimetypes: {},
 
     /**
      * @return Array of DOMNode elements
@@ -163,7 +164,7 @@ Uploader.prototype = {
         // finally send the request as binary data
         xhr.sendAsBinary(data);
     },
-    send_base64: function(filename, data) {
+    send_base64: function(filename, data, mimetype) {
         var xhr = new XMLHttpRequest;
         xhr.open("POST", "/apis/upload/base64/"+filename, true);
         xhr.onreadystatechange = function() {
@@ -171,6 +172,7 @@ Uploader.prototype = {
                 alert(xhr.responseText);
             }
         };
+        xhr.setRequestHeader("Content-Type", mimetype+"; charset=utf-8");
         xhr.sendAsBinary(data);
     }
 };
@@ -219,13 +221,14 @@ window.addEventListener("load", function() {
         reader1.readAsDataURL(input.files[0]);
         //reader2.readAsBinaryString(input.files[0]);
         //img.src = input.files[0].getAsDataURL();
+        uploader.mimetypes[input.files[0].name] = input.files[0].type;
     }, false);
 
     uploadBtn.addEventListener("click", function() {
         //uploader.send();
         //uploader.send2(input.files[0]);
         var filename = input.files[0].name;
-        uploader.send_base64(filename, uploader.imgdatas[filename]);
+        uploader.send_base64(filename, uploader.imgdatas[filename], uploader.mimetypes[filename]);
     }, false);
 
 }, false);

@@ -565,9 +565,15 @@ var dom = document.getElementById("test"),
 [理解DOMString、Document、FormData、Blob、File、ArrayBuffer数据类型](http://www.zhangxinxu.com/wordpress/2013/10/understand-domstring-document-formdata-blob-file-arraybuffer/)
 [Ajax file upload with pure JavaScript](http://igstan.ro/posts/2009-01-11-ajax-file-upload-with-pure-javascript.html)
 [FileReader.readAsDataURL()](https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsDataURL)
+[使用 JavaScript File API 实现文件上传](http://www.ibm.com/developerworks/cn/web/1101_hanbf_fileupload/index.html)
+[Canvas API](http://javascript.ruanyifeng.com/htmlapi/canvas.html)
+[js图片压缩上传](http://www.cnblogs.com/tonyjude/p/4261930.html)
 ### 使用FormData对象
 [FormData](https://developer.mozilla.org/zh-CN/docs/Web/API/FormData)
 [HTMLFormElement](https://developer.mozilla.org/zh-CN/docs/Web/API/HTMLFormElement)
+### 使用DataUrl来上传图片
+[FileReader.readAsDataURL upload to express.js](http://stackoverflow.com/questions/13069769/filereader-readasdataurl-upload-to-express-js)
+
 ## react-redux-nodejs-koa 授权相关
 [react中添加授权](https://auth0.com/blog/adding-authentication-to-your-react-flux-app/)  
 [授权](https://scotch.io/tutorials/build-a-react-flux-app-with-user-authentication)  

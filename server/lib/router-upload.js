@@ -28,8 +28,16 @@ export default class Uploader {
     async uploadBase64 (ctx, next) {
         //console.log (ctx.req);
         var filename = ctx.params.filename;
+        var charset = 'utf-8';
+        try {
+            charset = contentType.parse(ctx.req).parameters.charset;
+            //console.log ("get charset", charset);
+        } catch (e) {
+            console.log ("parse charset error!", e);
+            charset = 'utf-8';
+        }
         var rawText = await getRawBody(ctx.req, {
-            encoding: 'utf-8'
+            encoding: charset
         });
         var destfile = `${path.basename(filename, path.extname(filename))}-${dateformat(new Date(), "yyyymmdd")}-${uuid.v4()}${path.extname(filename)}`
         //console.log (rawText);
