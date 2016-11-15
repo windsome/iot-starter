@@ -16,3 +16,4 @@ db.*.sqlite
 
 src/index.html
 temp/*.*
+uploads

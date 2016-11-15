@@ -13,6 +13,7 @@ import 'isomorphic-fetch';
 
 import WechatMessage from './lib/router-wechat-message';
 import WechatApi2 from './lib/router-wechat-apis-v2';
+import Uploader from './lib/router-upload';
 
 const debug = _debug('app:server')
 
@@ -48,6 +49,9 @@ app.use(wechat2.router.routes()).use(wechat2.router.allowedMethods());
 
 var routerWechatMessage = WechatMessage({ router:{prefix: '/wechat'}, token:'Q0hctpus1eH5xdvrXBuTYzS23OewxhgO', apis: wechat2, redis: rstore });
 app.use(routerWechatMessage.routes()).use(routerWechatMessage.allowedMethods());
+
+var routerUpload = new Uploader({ router:{prefix: '/apis'}, folder: 'uploads' });
+app.use(routerUpload.router.routes()).use(routerUpload.router.allowedMethods());
 
 // Enable koa-proxy if it has been enabled in the config.
 if (config.proxy && config.proxy.enabled) {

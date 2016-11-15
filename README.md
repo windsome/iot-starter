@@ -324,8 +324,8 @@ mosquitto_pub -t /broker/smartlock1/1 --cafile /download/ca.crt -h mqtt.lancerte
 ## 用户发布及订房APP对应的数据库
 1, 用户相关表
 用户基础信息表user{id, password, name, email, telephone, cardid, addr, desc, avatar[pictureId], createAt, updateAt}
-微信用户信息表WechatUser {id, [userId], openid, subscribe, nickname, sex, language, city, province, country, headimgurl, subscribe_time, unionid, remark, groupid, tagid_list:[128,2]}
-用户标签表WechatUserTag(不是SQL数据库表)，直接从微信获取，保存在缓存数据库中，并且能动态更新，建议在解析某个用户的标签列表时发现有不匹配情况时，更新该用户信息和标签表信息，使其跟微信服务器一致。
+---微信用户信息表WechatUser（可以不需要，每次直接从微信服务器获取） {id, [userId], openid, subscribe, nickname, sex, language, city, province, country, headimgurl, subscribe_time, unionid, remark, groupid, tagid_list:[128,2]}
+---用户标签表WechatUserTag(不是SQL数据库表)，直接从微信获取，保存在缓存数据库中，并且能动态更新，建议在解析某个用户的标签列表时发现有不匹配情况时，更新该用户信息和标签表信息，使其跟微信服务器一致。
 2, 房间信息表
 房间信息表room{id, [ownerId], rentType{时租房HOUR，日租房DAY，月租房MONTH}, priceHour, priceDay, priceMonth, [currencyId---], title, address, gpsLatitude, gpsLongitude, peopleCount, washRoom, bedRoom, bedCount, checkIn, checkOut, [roomTypeId---], [headimgId]}
 房间图片(多对多关系表)roomPicture{id, [roomId], [pictureId]}
@@ -559,6 +559,15 @@ var dom = document.getElementById("test"),
 [dynamic load javascript/css 1](http://www.javascriptkit.com/javatutors/loadjavascriptcss.shtml)  
 [dynamic load javascript/css 2](http://www.javascriptkit.com/javatutors/loadjavascriptcss2.shtml)    
 [React中动态加载css文件](http://stackoverflow.com/questions/28386125/dynamically-load-a-stylesheet-with-react)  
+## 图片上传
+使用formdata方式上传或使用``` Content-Type: application/octet-stream ```方式上传
+参考
+[理解DOMString、Document、FormData、Blob、File、ArrayBuffer数据类型](http://www.zhangxinxu.com/wordpress/2013/10/understand-domstring-document-formdata-blob-file-arraybuffer/)
+[Ajax file upload with pure JavaScript](http://igstan.ro/posts/2009-01-11-ajax-file-upload-with-pure-javascript.html)
+[FileReader.readAsDataURL()](https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsDataURL)
+### 使用FormData对象
+[FormData](https://developer.mozilla.org/zh-CN/docs/Web/API/FormData)
+[HTMLFormElement](https://developer.mozilla.org/zh-CN/docs/Web/API/HTMLFormElement)
 ## react-redux-nodejs-koa 授权相关
 [react中添加授权](https://auth0.com/blog/adding-authentication-to-your-react-flux-app/)  
 [授权](https://scotch.io/tutorials/build-a-react-flux-app-with-user-authentication)  
