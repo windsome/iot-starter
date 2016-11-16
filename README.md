@@ -568,10 +568,16 @@ var dom = document.getElementById("test"),
 [使用 JavaScript File API 实现文件上传](http://www.ibm.com/developerworks/cn/web/1101_hanbf_fileupload/index.html)
 [Canvas API](http://javascript.ruanyifeng.com/htmlapi/canvas.html)
 [js图片压缩上传](http://www.cnblogs.com/tonyjude/p/4261930.html)
+[Using files from web applications](https://developer.mozilla.org/en-US/docs/Using_files_from_web_applications)
+[File Uploading over AJAX using HTML5](http://www.nickdesteffen.com/blog/file-uploading-over-ajax-using-html5)
 ### 使用FormData对象
+测试例子见 src/static/demos/fileupload_FormData.html
+后台见 apis/upload/form
 [FormData](https://developer.mozilla.org/zh-CN/docs/Web/API/FormData)
 [HTMLFormElement](https://developer.mozilla.org/zh-CN/docs/Web/API/HTMLFormElement)
 ### 使用DataUrl来上传图片
+测试例子见 src/static/demos/fileupload_base64.html
+后台见 apis/upload/base64/a.png
 [FileReader.readAsDataURL upload to express.js](http://stackoverflow.com/questions/13069769/filereader-readasdataurl-upload-to-express-js)
 
 ## react-redux-nodejs-koa 授权相关

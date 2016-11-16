@@ -39,11 +39,20 @@ export default class Uploader {
         var rawText = await getRawBody(ctx.req, {
             encoding: charset
         });
-        var destfile = `${path.basename(filename, path.extname(filename))}-${dateformat(new Date(), "yyyymmdd")}-${uuid.v4()}${path.extname(filename)}`
-        //console.log (rawText);
-        var matches = rawText.match(/^data:.+\/(.+);base64,(.*)$/);
-        var ext = matches[1];
-        var base64_data = matches[2];
+        var destfile = this.genFileName(filename);
+
+        // get image base64 data.
+        var pos1 = rawText.indexOf (";base64,");
+        if (pos1 < 0) {
+            ctx.body = { errcode:-1, errmsg: "image content wrong!" };
+            return;
+        }
+        pos1 = pos1 + ";base64,".length;
+        var base64_data = rawText.substr (pos1);
+        // // care!!! regular match() expend too much time, change to indexOf().
+        // var matches = rawText.match(/^data:.+\/(.+);base64,(.*)$/);
+        // var ext = matches[1];
+        // var base64_data = matches[2];
         var buffer = new Buffer(base64_data, 'base64');
 
         const folder = path.join(process.cwd(), this.opts.folder);
@@ -79,7 +88,8 @@ export default class Uploader {
         // Generate oss path
         let result = {}
         files.forEach(file => {
-            result[file.filename] = `${path.basename(file.filename, path.extname(file.filename))}-${dateformat(new Date(), "yyyymmdd")}-${uuid.v4()}${path.extname(file.filename)}`
+            result[file.filename] = this.genFileName(file.filename);
+            //result[file.filename] = `${path.basename(file.filename, path.extname(file.filename))}-${dateformat(new Date(), "yyyymmdd")}-${uuid.v4()}${path.extname(file.filename)}`
         })
         
         const folder = path.join(process.cwd(), this.opts.folder);
@@ -112,5 +122,9 @@ export default class Uploader {
             file.on("end", () => { return resolve(filename) })
         })
     }
-    
+
+    genFileName (filename) {
+        var destfile = `${path.basename(filename, path.extname(filename))}-${dateformat(new Date(), "yyyymmddHHMMss")}-${uuid.v4()}${path.extname(filename)}`
+        return destfile;
+    }
 }
