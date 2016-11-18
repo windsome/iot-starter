@@ -6,6 +6,7 @@ import classNames from 'classnames/bind';
 const cx = classNames.bind(styles);
 
 import ImageGallery, { PriceContainer } from 'components/widgets/ImageGallery'
+import ImageUploader from 'components/widgets/ImageUploader'
 import FiveStar from 'components/widgets/FiveStar'
 
 const CoverImage = (props) => {
@@ -216,6 +217,12 @@ class DetailInn extends Component {
 <div className='row'><div>
   <hr/>
 </div></div>
+
+<div className='row'>
+  <div className="col-xs-12 col-sm-12">
+    <ImageUploader addImage={this.props.addImage} removeImage={this.props.removeImage} info={this.props.info} data={this.props.data}/>
+  </div>
+</div>
 
 </div>
 

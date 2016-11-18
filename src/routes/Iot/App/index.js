@@ -35,10 +35,24 @@ export default (store) => ({
             }
         },
         {
+            path: 'inn/create',
+            getComponent(nextState, cb) {
+                require.ensure([], (require) => {
+                    const tempdataReducer = require('../../../store/lib/tempdata').default;
+                    injectReducer(store, { key:'tempdata', reducer:tempdataReducer })
+
+                    const Component = require('./containers/EditInnContainer').default
+                    cb(null, Component)
+                })
+            }
+        },
+        {
             path: 'inn/:id',
             getComponent(nextState, cb) {
                 require.ensure([], (require) => {
                     const Component = require('./containers/DetailInnContainer').default
+                    const uploaderReducer = require('../../../store/lib/uploader').default
+                    injectReducer(store, { key:'uploader', reducer:uploaderReducer })
                     cb(null, Component)
                 })
             }
